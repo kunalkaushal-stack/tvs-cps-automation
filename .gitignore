@@ -3,7 +3,8 @@ __pycache__/
 *.pyo
 uploads/
 outputs/
-template.pptx
+# template.pptx is intentionally committed under assets/
+output.pptx
 # generated output decks
 outputs/
 # uploaded temp files
