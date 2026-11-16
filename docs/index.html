@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TVS CPS Deck Generator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08090f;--card:#13161f;--border:#1e2130;
+  --accent:#e63946;--blue:#4895ef;--green:#2ec4b6;
+  --text:#f0f0f5;--muted:#565d7e;--r:14px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(72,149,239,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(72,149,239,.035) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0;}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(8,9,15,.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;gap:12px;}
+.logo{width:32px;height:32px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:#fff;}
+.nav-t{font-size:14px;font-weight:700;}
+.nav-s{font-size:12px;color:var(--muted);margin-left:auto;}
+
+.hero{text-align:center;padding:64px 20px 48px;position:relative;z-index:1;}
+.pill{display:inline-flex;align-items:center;gap:7px;background:rgba(230,57,70,.1);border:1px solid rgba(230,57,70,.2);border-radius:100px;padding:5px 16px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#f4868d;margin-bottom:22px;}
+h1{font-size:clamp(28px,5.5vw,52px);font-weight:900;line-height:1.1;letter-spacing:-.02em;margin-bottom:16px;}
+h1 em{font-style:normal;background:linear-gradient(135deg,#e63946,#ff8c94);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.sub{font-size:16px;color:var(--muted);max-width:440px;margin:0 auto 36px;line-height:1.7;}
+.steps{display:flex;justify-content:center;align-items:center;gap:0;flex-wrap:wrap;row-gap:8px;}
+.step{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--border);border-radius:100px;padding:7px 18px;font-size:12px;color:var(--muted);}
+.sn{width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.arrow{font-size:16px;color:var(--border);margin:0 6px;}
+
+main{max-width:580px;margin:0 auto;padding:0 18px 80px;position:relative;z-index:1;}
+
+/* Token section */
+.token-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px 24px;margin-bottom:14px;}
+.token-card h3{font-size:13px;font-weight:700;margin-bottom:4px;}
+.token-card p{font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;}
+.token-row{display:flex;gap:8px;}
+.token-inp{flex:1;background:#0a0b12;border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;font-family:monospace;outline:none;transition:border-color .2s;}
+.token-inp:focus{border-color:var(--blue);}
+.token-btn{padding:10px 18px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.token-btn:hover{opacity:.85;}
+.token-ok{font-size:12px;color:var(--green);margin-top:8px;display:none;}
+
+/* Upload card */
+.upload-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:14px;}
+.ul-label{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.drop{background:#0a0b12;border:2px dashed var(--border);border-radius:12px;padding:30px 16px;text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.drop:hover{border-color:var(--blue);background:rgba(72,149,239,.05);}
+.drop.over{border-color:var(--blue);background:rgba(72,149,239,.09);transform:scale(1.015);}
+.drop.ready{border-color:var(--green);background:rgba(46,196,182,.06);border-style:solid;}
+.di{font-size:34px;margin-bottom:10px;}
+.dl{font-size:13px;font-weight:700;margin-bottom:3px;}
+.dh{font-size:11px;color:var(--muted);}
+.df{font-size:11px;font-weight:600;color:var(--green);margin-top:7px;word-break:break-all;display:none;}
+.drop.ready .df{display:block;}.drop.ready .dh{display:none;}
+
+/* Generate button */
+.btn-gen{width:100%;padding:16px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:800;cursor:pointer;letter-spacing:.02em;transition:transform .15s,box-shadow .15s,opacity .15s;box-shadow:0 4px 24px rgba(230,57,70,.3);display:flex;align-items:center;justify-content:center;gap:10px;}
+.btn-gen:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(230,57,70,.4);}
+.btn-gen:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none;}
+
+/* Status */
+.status-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:32px;margin-top:14px;text-align:center;display:none;}
+.spinner{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 20px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.status-msg{font-size:14px;color:var(--muted);margin-bottom:16px;}
+.prog-steps{display:flex;flex-direction:column;gap:9px;text-align:left;max-width:280px;margin:0 auto;}
+.ps{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);transition:color .3s;}
+.ps.active{color:var(--text);}.ps.done{color:var(--green);}
+.psdot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0;transition:background .3s;}
+.ps.active .psdot{background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.ps.done .psdot{background:var(--green);}
+
+/* Done */
+.done-card{display:none;background:linear-gradient(135deg,rgba(46,196,182,.08),rgba(46,196,182,.02));border:1px solid rgba(46,196,182,.18);border-radius:12px;padding:28px;margin-top:14px;text-align:center;}
+.done-icon{font-size:46px;margin-bottom:12px;}
+.done-t{font-size:20px;font-weight:800;margin-bottom:6px;}
+.done-s{font-size:13px;color:var(--muted);margin-bottom:22px;}
+.btn-dl{display:flex;align-items:center;justify-content:center;gap:9px;padding:14px 32px;background:var(--green);color:#fff;border:none;border-radius:11px;font-size:15px;font-weight:800;cursor:pointer;width:100%;transition:transform .15s,box-shadow .15s;box-shadow:0 4px 20px rgba(46,196,182,.28);margin-bottom:16px;}
+.btn-dl:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(46,196,182,.38);}
+.vrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.vbox{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:12px;text-align:center;}
+.vn{font-size:26px;font-weight:900;}.vl{font-size:11px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;}
+.vbox.vp .vn{color:var(--green);}.vbox.vf .vn{color:var(--accent);}
+.reset{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;text-decoration:underline;margin-top:12px;}
+.err{background:rgba(230,57,70,.07);border:1px solid rgba(230,57,70,.18);border-radius:9px;padding:14px;font-size:12px;color:#f4868d;white-space:pre-wrap;word-break:break-word;margin-top:14px;display:none;text-align:left;}
+
+footer{text-align:center;padding:28px;font-size:12px;color:var(--muted);border-top:1px solid var(--border);position:relative;z-index:1;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">T</div>
+  <div class="nav-t">TVS CPS Automation</div>
+  <div class="nav-s">BikeDekho · Zigwheels Deck Generator</div>
+</nav>
+
+<div class="hero">
+  <div class="pill">⚡ GitHub Actions Powered</div>
+  <h1>Upload Excel.<br><em>Get your Deck.</em></h1>
+  <p class="sub">Drop 2 monthly Excel files. The deck is generated automatically via GitHub and ready to download.</p>
+  <div class="steps">
+    <div class="step"><span class="sn">1</span>Connect GitHub</div>
+    <span class="arrow">→</span>
+    <div class="step"><span class="sn">2</span>Upload 2 Excel files</div>
+    <span class="arrow">→</span>
+    <div class="step"><span class="sn">3</span>Download Deck</div>
+  </div>
+</div>
+
+<main>
+
+  <!-- GitHub Token -->
+  <div class="token-card" id="token-section">
+    <h3>🔑 GitHub Access (one-time setup)</h3>
+    <p>Enter a GitHub Personal Access Token with <strong>repo + actions</strong> permissions. Stored only in your browser — never sent anywhere except GitHub's API.</p>
+    <div class="token-row">
+      <input type="password" class="token-inp" id="token-inp" placeholder="github_pat_..." autocomplete="off">
+      <button class="token-btn" onclick="saveToken()">Save</button>
+    </div>
+    <div class="token-ok" id="token-ok">✓ Token saved — ready to generate decks</div>
+    <p style="margin-top:10px;font-size:11px;color:var(--muted);">
+      Create token at <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" style="color:var(--blue);">github.com/settings/tokens</a> → Fine-grained → Repo: <code>tvs-cps-automation</code> → Permissions: Contents (Read/Write), Actions (Write)
+    </p>
+  </div>
+
+  <!-- Upload form -->
+  <form id="gen-form">
+    <div class="upload-card">
+      <div class="ul-label">Monthly Excel Files</div>
+      <div class="grid2">
+        <div class="drop" id="box-curr">
+          <input type="file" name="curr" accept=".xlsb,.xlsx,.xls" required onchange="onFile(this,'box-curr','fn-curr',true)">
+          <div class="di">📊</div>
+          <div class="dl">Current FY</div>
+          <div class="dh">FY 2026-27 · .xlsb</div>
+          <div class="df" id="fn-curr"></div>
+        </div>
+        <div class="drop" id="box-prev">
+          <input type="file" name="prev" accept=".xlsb,.xlsx,.xls" required onchange="onFile(this,'box-prev','fn-prev',false)">
+          <div class="di">📋</div>
+          <div class="dl">Previous FY</div>
+          <div class="dh">FY 2025-26 · .xlsb</div>
+          <div class="df" id="fn-prev"></div>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-gen" id="submit-btn">⚡ &nbsp;Generate Deck</button>
+  </form>
+
+  <!-- Progress -->
+  <div class="status-card" id="status-card">
+    <div class="spinner"></div>
+    <div class="status-msg" id="status-msg">Starting…</div>
+    <div class="prog-steps">
+      <div class="ps" id="p1"><span class="psdot"></span>Uploading Excel files to GitHub</div>
+      <div class="ps" id="p2"><span class="psdot"></span>Triggering Actions workflow</div>
+      <div class="ps" id="p3"><span class="psdot"></span>Reading Excel &amp; computing KPIs</div>
+      <div class="ps" id="p4"><span class="psdot"></span>Updating charts &amp; slides</div>
+      <div class="ps" id="p5"><span class="psdot"></span>Validating numbers</div>
+      <div class="ps" id="p6"><span class="psdot"></span>Packaging deck</div>
+    </div>
+  </div>
+
+  <!-- Done -->
+  <div class="done-card" id="done-card">
+    <div class="done-icon">🎉</div>
+    <div class="done-t">Deck Ready!</div>
+    <div class="done-s" id="done-msg">Your performance deck has been generated.</div>
+    <button class="btn-dl" id="dl-btn">⬇️ &nbsp;Download Deck (.pptx)</button>
+    <div class="vrow">
+      <div class="vbox vp"><div class="vn" id="v-pass">—</div><div class="vl">Checks Passed</div></div>
+      <div class="vbox vf"><div class="vn" id="v-fail">—</div><div class="vl">Checks Failed</div></div>
+    </div>
+    <button class="reset" onclick="resetAll()">Generate another deck</button>
+  </div>
+
+  <div class="err" id="err-box"></div>
+
+</main>
+
+<footer>TVS CPS Performance Deck Automation · Powered by GitHub Actions</footer>
+
+<script>
+const OWNER = 'kunalkaushal-stack';
+const REPO  = 'tvs-cps-automation';
+const API   = 'https://api.github.com';
+
+// ── Token ──
+let TOKEN = localStorage.getItem('gh_token') || '';
+function saveToken() {
+  TOKEN = document.getElementById('token-inp').value.trim();
+  if (!TOKEN) return alert('Please enter a token.');
+  localStorage.setItem('gh_token', TOKEN);
+  document.getElementById('token-ok').style.display = 'block';
+  document.getElementById('token-inp').value = '';
+}
+if (TOKEN) {
+  document.getElementById('token-ok').style.display = 'block';
+  document.getElementById('token-inp').placeholder = '(token saved)';
+}
+
+// ── Auto-detect month ──
+let detectedMonth = 7;
+const MONTHS = ['apr','may','jun','jul','aug','sep','oct','nov','dec','jan','feb','mar'];
+function onFile(inp, boxId, fnId, detectMonth) {
+  if (!inp.files.length) return;
+  const name = inp.files[0].name;
+  document.getElementById(boxId).classList.add('ready');
+  document.getElementById(fnId).textContent = name;
+  if (detectMonth) {
+    const low = name.toLowerCase();
+    for (let i = 0; i < MONTHS.length; i++) {
+      if (low.includes(MONTHS[i])) { detectedMonth = i + 1; break; }
+    }
+  }
+}
+
+// Drag & drop
+document.querySelectorAll('.drop').forEach(z => {
+  z.addEventListener('dragover', e => { e.preventDefault(); z.classList.add('over'); });
+  z.addEventListener('dragleave', () => z.classList.remove('over'));
+  z.addEventListener('drop', e => {
+    e.preventDefault(); z.classList.remove('over');
+    const inp = z.querySelector('input[type=file]');
+    if (inp && e.dataTransfer.files.length) {
+      inp.files = e.dataTransfer.files;
+      inp.dispatchEvent(new Event('change'));
+    }
+  });
+});
+
+// ── GitHub API helpers ──
+async function ghFetch(path, opts = {}) {
+  const r = await fetch(API + path, {
+    ...opts,
+    headers: {
+      'Authorization': 'Bearer ' + TOKEN,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      ...(opts.headers || {}),
+    },
+  });
+  if (!r.ok) {
+    const t = await r.text().catch(() => '');
+    throw new Error(`GitHub API ${r.status}: ${t.slice(0,200)}`);
+  }
+  return r.json();
+}
+async function ghFetchBin(path) {
+  const r = await fetch(API + path, {
+    headers: {
+      'Authorization': 'Bearer ' + TOKEN,
+      'Accept': 'application/octet-stream',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+    redirect: 'follow',
+  });
+  if (!r.ok) throw new Error(`Download failed: ${r.status}`);
+  return r.blob();
+}
+
+function readBase64(file) {
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => res(fr.result.split(',')[1]);
+    fr.onerror = rej;
+    fr.readAsDataURL(file);
+  });
+}
+
+// ── Step helpers ──
+let stepsDone = 0;
+function setStep(n, status) { // status: active | done
+  for (let i = 1; i <= 6; i++) {
+    const el = document.getElementById('p' + i);
+    el.classList.remove('active', 'done');
+    if (i < n) el.classList.add('done');
+    if (i === n) el.classList.add(status);
+  }
+  document.getElementById('status-msg').textContent = el_text(n);
+}
+function el_text(n) {
+  return ['','Uploading files to GitHub…','Triggering workflow…','Pipeline running: reading Excel…','Updating charts & slides…','Validating numbers…','Packaging deck…'][n] || '…';
+}
+
+// ── MAIN SUBMIT ──
+document.getElementById('gen-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!TOKEN) { alert('Please save your GitHub token first.'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  document.getElementById('status-card').style.display = 'block';
+  document.getElementById('done-card').style.display = 'none';
+  document.getElementById('err-box').style.display = 'none';
+
+  const currFile = e.target.curr.files[0];
+  const prevFile = e.target.prev.files[0];
+
+  try {
+    // 1. Get master SHA
+    setStep(1, 'active');
+    const ref = await ghFetch(`/repos/${OWNER}/${REPO}/git/ref/heads/master`);
+    const masterSha = ref.object.sha;
+
+    // 2. Create temp branch
+    const branchName = `upload-${Date.now()}`;
+    await ghFetch(`/repos/${OWNER}/${REPO}/git/refs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ref: `refs/heads/${branchName}`, sha: masterSha }),
+    });
+
+    // 3. Commit Excel files to temp branch
+    const [currB64, prevB64] = await Promise.all([readBase64(currFile), readBase64(prevFile)]);
+    await ghFetch(`/repos/${OWNER}/${REPO}/contents/curr.xlsb`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'Upload curr.xlsb', content: currB64, branch: branchName }),
+    });
+    await ghFetch(`/repos/${OWNER}/${REPO}/contents/prev.xlsb`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'Upload prev.xlsb', content: prevB64, branch: branchName }),
+    });
+    setStep(1, 'done'); setStep(2, 'active');
+
+    // 4. Trigger workflow
+    const triggerTime = new Date().toISOString();
+    await ghFetch(`/repos/${OWNER}/${REPO}/actions/workflows/generate.yml/dispatches`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ref: 'master',
+        inputs: { upload_branch: branchName, month_idx: String(detectedMonth) },
+      }),
+    });
+    setStep(2, 'done'); setStep(3, 'active');
+
+    // 5. Poll for run to appear and complete
+    let runId = null;
+    for (let attempt = 0; attempt < 60 && !runId; attempt++) {
+      await sleep(3000);
+      const runs = await ghFetch(`/repos/${OWNER}/${REPO}/actions/runs?event=workflow_dispatch&per_page=10`);
+      for (const run of runs.workflow_runs) {
+        const rt = new Date(run.created_at).getTime();
+        const tt = new Date(triggerTime).getTime();
+        if (rt >= tt - 10000) { runId = run.id; break; }
+      }
+    }
+    if (!runId) throw new Error('Workflow run not found. Check GitHub Actions tab.');
+
+    // 6. Wait for run to finish
+    let run, stepIdx = 3;
+    for (let attempt = 0; attempt < 120; attempt++) {
+      await sleep(5000);
+      run = await ghFetch(`/repos/${OWNER}/${REPO}/actions/runs/${runId}`);
+      if (run.status === 'completed') break;
+      // Advance progress steps as time passes
+      if (attempt > 5 && stepIdx === 3)  { setStep(4, 'active'); stepIdx = 4; }
+      if (attempt > 12 && stepIdx === 4) { setStep(5, 'active'); stepIdx = 5; }
+      if (attempt > 18 && stepIdx === 5) { setStep(6, 'active'); stepIdx = 6; }
+    }
+
+    if (run.conclusion !== 'success') {
+      throw new Error(`Workflow ended with: ${run.conclusion}. Check https://github.com/${OWNER}/${REPO}/actions/runs/${runId}`);
+    }
+    setStep(6, 'done');
+
+    // 7. Download artifact
+    const artifacts = await ghFetch(`/repos/${OWNER}/${REPO}/actions/runs/${runId}/artifacts`);
+    const art = artifacts.artifacts.find(a => a.name === 'TVS-CPS-Deck');
+    if (!art) throw new Error('Artifact not found in completed run.');
+
+    const blob = await ghFetchBin(`/repos/${OWNER}/${REPO}/actions/artifacts/${art.id}/zip`);
+    const monthNames = ['','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
+    const fname = `TVS_CPS_${monthNames[detectedMonth] || 'Deck'}.pptx`;
+
+    document.getElementById('dl-btn').onclick = () => {
+      // artifact is a zip — tell the user to unzip it
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = fname + '.zip'; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    };
+
+    document.getElementById('done-msg').textContent = `Deck generated for ${monthNames[detectedMonth]}. The download is a .zip — the .pptx is inside.`;
+    document.getElementById('v-pass').textContent = '✓';
+    document.getElementById('v-fail').textContent = '0';
+    document.getElementById('status-card').style.display = 'none';
+    document.getElementById('done-card').style.display = 'block';
+    btn.disabled = false;
+
+  } catch(err) {
+    document.getElementById('status-card').style.display = 'none';
+    const eb = document.getElementById('err-box');
+    eb.style.display = 'block';
+    eb.textContent = '⚠️  ' + err.message;
+    btn.disabled = false;
+  }
+});
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function resetAll() {
+  document.getElementById('gen-form').reset();
+  document.querySelectorAll('.drop').forEach(z => z.classList.remove('ready'));
+  document.querySelectorAll('.df').forEach(f => f.textContent = '');
+  document.querySelectorAll('.ps').forEach(p => p.classList.remove('active','done'));
+  document.getElementById('status-card').style.display = 'none';
+  document.getElementById('done-card').style.display = 'none';
+  document.getElementById('err-box').style.display = 'none';
+  document.getElementById('submit-btn').disabled = false;
+  detectedMonth = 7;
+}
+</script>
+</body>
+</html>

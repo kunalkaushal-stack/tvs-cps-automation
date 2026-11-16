@@ -4,8 +4,12 @@ __pycache__/
 uploads/
 outputs/
 template.pptx
-# keep template.pptx out of git (too large; upload manually to server)
-# *.pptx
+# generated output decks
+outputs/
+# uploaded temp files
+uploads/
+curr.xlsb
+prev.xlsb
 *.xlsb
 *.xlsx
 *.xls

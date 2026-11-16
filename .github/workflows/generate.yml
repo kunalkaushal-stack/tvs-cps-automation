@@ -1,0 +1,81 @@
+name: Generate CPS Deck
+
+on:
+  workflow_dispatch:
+    inputs:
+      upload_branch:
+        description: 'Branch containing uploaded Excel files'
+        required: true
+      month_idx:
+        description: 'Report month (1=Apr ... 12=Mar)'
+        required: true
+        default: '7'
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout main (code + template)
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          path: repo
+
+      - name: Fetch uploaded Excel files
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.upload_branch }}
+          path: upload
+          sparse-checkout: |
+            curr.xlsb
+            prev.xlsb
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install pyxlsb
+
+      - name: Check template exists
+        run: |
+          if [ ! -f repo/assets/template.pptx ]; then
+            echo "ERROR: assets/template.pptx not found in repo."
+            echo "Please commit your base PPTX as assets/template.pptx once."
+            exit 1
+          fi
+
+      - name: Run pipeline
+        run: |
+          cd repo
+          python tvs_cps_automation/run_pipeline.py \
+            --curr  ../upload/curr.xlsb \
+            --prev  ../upload/prev.xlsb \
+            --template assets/template.pptx \
+            --month ${{ inputs.month_idx }} \
+            --out   output.pptx
+        env:
+          PYTHONPATH: .
+
+      - name: Upload deck as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TVS-CPS-Deck
+          path: repo/output.pptx
+          retention-days: 7
+
+      - name: Delete temp upload branch
+        if: always()
+        run: |
+          cd repo
+          git push origin --delete ${{ inputs.upload_branch }} || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
