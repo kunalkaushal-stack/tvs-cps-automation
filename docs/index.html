@@ -250,7 +250,10 @@ async function ghFetch(path, opts = {}) {
     const t = await r.text().catch(() => '');
     throw new Error(`GitHub API ${r.status}: ${t.slice(0,200)}`);
   }
-  return r.json();
+  // 204 No Content (e.g. workflow_dispatch) has no body — return null
+  if (r.status === 204) return null;
+  const text = await r.text();
+  return text ? JSON.parse(text) : null;
 }
 async function ghFetchBin(path) {
   const r = await fetch(API + path, {
