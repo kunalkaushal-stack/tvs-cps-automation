@@ -115,12 +115,13 @@ def generate():
 
     curr_path = save("curr_xlsb")
     prev_path = save("prev_xlsb")
+    # Template: use uploaded file, or fall back to saved template.pptx
     tmpl_path = save("template_pptx") or (TEMPLATE_PATH if os.path.exists(TEMPLATE_PATH) else None)
 
     errors = []
     if not curr_path: errors.append("Current FY Excel file is required.")
     if not prev_path: errors.append("Previous FY Excel file is required.")
-    if not tmpl_path: errors.append("Template PPTX is required (upload once or save as template.pptx).")
+    if not tmpl_path: errors.append("No template deck found. Please upload template.pptx once via the CLI or upload it here.")
     if errors:
         return jsonify({"error": " ".join(errors)}), 400
 
