@@ -7,181 +7,391 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#08090f;--card:#13161f;--border:#1e2130;
-  --accent:#e63946;--blue:#4895ef;--green:#2ec4b6;
-  --text:#f0f0f5;--muted:#565d7e;--r:14px;
+  --bg:#07080f;--s1:#0d0f1a;--card:#111420;--card2:#161929;
+  --border:#1c2035;--border2:#232740;
+  --accent:#e63946;--accent2:rgba(230,57,70,.12);
+  --blue:#4895ef;--blue2:rgba(72,149,239,.1);
+  --green:#2ec4b6;--green2:rgba(46,196,182,.1);
+  --yellow:#f4a261;
+  --text:#eef0f8;--muted:#4a506e;--muted2:#6b7496;
+  --r:12px;--r2:16px;
+  --font:'Segoe UI',system-ui,-apple-system,sans-serif;
 }
-body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;overflow-x:hidden;}
-body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(72,149,239,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(72,149,239,.035) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0;}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(72,149,239,.06),transparent);pointer-events:none;z-index:0;}
 
-nav{position:sticky;top:0;z-index:100;background:rgba(8,9,15,.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;gap:12px;}
-.logo{width:32px;height:32px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:#fff;}
-.nav-t{font-size:14px;font-weight:700;}
-.nav-s{font-size:12px;color:var(--muted);margin-left:auto;}
+/* ───── TOKEN SETUP OVERLAY ───── */
+#setup-overlay{
+  position:fixed;inset:0;z-index:1000;
+  background:rgba(7,8,15,.97);
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  animation:fadeIn .3s ease;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.setup-box{
+  width:100%;max-width:520px;
+  background:var(--card);border:1px solid var(--border2);
+  border-radius:20px;padding:40px;
+  box-shadow:0 32px 80px rgba(0,0,0,.6);
+}
+.setup-logo{
+  width:48px;height:48px;border-radius:12px;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:22px;color:#fff;margin:0 auto 24px;
+}
+.setup-box h2{font-size:22px;font-weight:800;text-align:center;margin-bottom:8px;}
+.setup-box .sub{font-size:14px;color:var(--muted2);text-align:center;line-height:1.6;margin-bottom:28px;}
+.setup-steps{display:flex;flex-direction:column;gap:14px;margin-bottom:28px;}
+.ss{
+  display:flex;align-items:flex-start;gap:14px;
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:var(--r);padding:14px 16px;
+}
+.ss-num{
+  width:28px;height:28px;border-radius:50%;background:var(--accent);
+  color:#fff;font-size:12px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;
+}
+.ss-body{flex:1;}
+.ss-title{font-size:13px;font-weight:700;margin-bottom:3px;}
+.ss-desc{font-size:12px;color:var(--muted2);line-height:1.6;}
+.ss-desc a{color:var(--blue);text-decoration:none;}
+.ss-desc a:hover{text-decoration:underline;}
+.ss-desc code{
+  background:var(--border2);border-radius:4px;padding:1px 6px;
+  font-family:monospace;font-size:11px;
+}
+.token-row{display:flex;gap:8px;margin-top:10px;}
+.token-inp{
+  flex:1;background:var(--bg);border:1px solid var(--border2);
+  border-radius:8px;padding:10px 13px;
+  color:var(--text);font-size:13px;font-family:monospace;
+  outline:none;transition:border-color .2s;
+}
+.token-inp:focus{border-color:var(--blue);}
+.token-inp::placeholder{color:var(--muted);}
+.btn-save{
+  padding:10px 18px;background:var(--accent);color:#fff;
+  border:none;border-radius:8px;font-size:13px;font-weight:700;
+  cursor:pointer;white-space:nowrap;transition:opacity .2s;
+}
+.btn-save:hover{opacity:.85;}
+.setup-err{font-size:12px;color:#f4868d;margin-top:8px;display:none;}
 
-.hero{text-align:center;padding:64px 20px 48px;position:relative;z-index:1;}
-.pill{display:inline-flex;align-items:center;gap:7px;background:rgba(230,57,70,.1);border:1px solid rgba(230,57,70,.2);border-radius:100px;padding:5px 16px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#f4868d;margin-bottom:22px;}
-h1{font-size:clamp(28px,5.5vw,52px);font-weight:900;line-height:1.1;letter-spacing:-.02em;margin-bottom:16px;}
-h1 em{font-style:normal;background:linear-gradient(135deg,#e63946,#ff8c94);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.sub{font-size:16px;color:var(--muted);max-width:440px;margin:0 auto 36px;line-height:1.7;}
-.steps{display:flex;justify-content:center;align-items:center;gap:0;flex-wrap:wrap;row-gap:8px;}
-.step{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--border);border-radius:100px;padding:7px 18px;font-size:12px;color:var(--muted);}
-.sn{width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.arrow{font-size:16px;color:var(--border);margin:0 6px;}
+/* ───── NAV ───── */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(7,8,15,.88);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  padding:12px 28px;display:flex;align-items:center;gap:12px;
+}
+.nav-logo{
+  width:30px;height:30px;border-radius:7px;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:14px;color:#fff;flex-shrink:0;
+}
+.nav-title{font-size:14px;font-weight:700;}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.nav-status{
+  font-size:11px;color:var(--green);
+  background:var(--green2);border:1px solid rgba(46,196,182,.2);
+  border-radius:100px;padding:4px 12px;display:flex;align-items:center;gap:6px;
+}
+.nav-status .dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+.btn-rekey{
+  font-size:11px;color:var(--muted2);background:none;border:1px solid var(--border2);
+  border-radius:6px;padding:5px 11px;cursor:pointer;transition:all .2s;
+}
+.btn-rekey:hover{color:var(--text);border-color:var(--muted2);}
 
+/* ───── HERO ───── */
+.hero{text-align:center;padding:60px 20px 44px;position:relative;z-index:1;}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--accent2);border:1px solid rgba(230,57,70,.2);
+  border-radius:100px;padding:5px 16px;
+  font-size:11px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:#f4868d;margin-bottom:20px;
+}
+h1{font-size:clamp(26px,5vw,48px);font-weight:900;line-height:1.1;letter-spacing:-.02em;margin-bottom:14px;}
+h1 span{background:linear-gradient(135deg,#e63946,#ff8c94);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero-sub{font-size:15px;color:var(--muted2);max-width:400px;margin:0 auto 32px;line-height:1.7;}
+.flow{display:flex;justify-content:center;align-items:center;gap:0;flex-wrap:wrap;row-gap:8px;}
+.flow-step{
+  display:flex;align-items:center;gap:8px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:100px;padding:6px 16px;font-size:12px;color:var(--muted2);
+}
+.flow-step .n{
+  width:18px;height:18px;border-radius:50%;background:var(--accent);
+  color:#fff;font-size:9px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+}
+.flow-arr{font-size:14px;color:var(--border2);margin:0 4px;}
+
+/* ───── MAIN ───── */
 main{max-width:580px;margin:0 auto;padding:0 18px 80px;position:relative;z-index:1;}
 
-/* Token section */
-.token-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px 24px;margin-bottom:14px;}
-.token-card h3{font-size:13px;font-weight:700;margin-bottom:4px;}
-.token-card p{font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;}
-.token-row{display:flex;gap:8px;}
-.token-inp{flex:1;background:#0a0b12;border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;font-family:monospace;outline:none;transition:border-color .2s;}
-.token-inp:focus{border-color:var(--blue);}
-.token-btn{padding:10px 18px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
-.token-btn:hover{opacity:.85;}
-.token-ok{font-size:12px;color:var(--green);margin-top:8px;display:none;}
-
-/* Upload card */
-.upload-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:14px;}
-.ul-label{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+/* ───── UPLOAD CARD ───── */
+.upload-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r2);padding:24px;margin-bottom:14px;
+}
+.card-label{
+  font-size:10px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:14px;
+}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.drop{background:#0a0b12;border:2px dashed var(--border);border-radius:12px;padding:30px 16px;text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+
+.drop{
+  background:var(--s1);border:2px dashed var(--border2);
+  border-radius:var(--r);padding:28px 14px;
+  text-align:center;cursor:pointer;
+  transition:all .2s;position:relative;overflow:hidden;
+}
 .drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-.drop:hover{border-color:var(--blue);background:rgba(72,149,239,.05);}
-.drop.over{border-color:var(--blue);background:rgba(72,149,239,.09);transform:scale(1.015);}
-.drop.ready{border-color:var(--green);background:rgba(46,196,182,.06);border-style:solid;}
-.di{font-size:34px;margin-bottom:10px;}
-.dl{font-size:13px;font-weight:700;margin-bottom:3px;}
-.dh{font-size:11px;color:var(--muted);}
-.df{font-size:11px;font-weight:600;color:var(--green);margin-top:7px;word-break:break-all;display:none;}
-.drop.ready .df{display:block;}.drop.ready .dh{display:none;}
+.drop:hover{border-color:var(--blue);background:var(--blue2);}
+.drop.over{border-color:var(--blue);background:var(--blue2);transform:scale(1.015);}
+.drop.ready{border-color:var(--green);background:var(--green2);border-style:solid;}
+.drop-icon{font-size:32px;margin-bottom:10px;}
+.drop-label{font-size:13px;font-weight:700;margin-bottom:3px;}
+.drop-hint{font-size:11px;color:var(--muted2);}
+.drop-fname{font-size:11px;font-weight:600;color:var(--green);margin-top:7px;word-break:break-all;display:none;}
+.drop.ready .drop-fname{display:block;}.drop.ready .drop-hint{display:none;}
 
-/* Generate button */
-.btn-gen{width:100%;padding:16px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:800;cursor:pointer;letter-spacing:.02em;transition:transform .15s,box-shadow .15s,opacity .15s;box-shadow:0 4px 24px rgba(230,57,70,.3);display:flex;align-items:center;justify-content:center;gap:10px;}
-.btn-gen:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(230,57,70,.4);}
-.btn-gen:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none;}
+/* ───── GENERATE BTN ───── */
+.btn-gen{
+  width:100%;padding:16px;background:var(--accent);color:#fff;
+  border:none;border-radius:var(--r);font-size:15px;font-weight:800;
+  cursor:pointer;letter-spacing:.02em;
+  transition:transform .15s,box-shadow .15s,opacity .15s;
+  box-shadow:0 4px 24px rgba(230,57,70,.28);
+  display:flex;align-items:center;justify-content:center;gap:10px;
+}
+.btn-gen:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 32px rgba(230,57,70,.4);}
+.btn-gen:disabled{opacity:.35;cursor:not-allowed;}
 
-/* Status */
-.status-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:32px;margin-top:14px;text-align:center;display:none;}
-.spinner{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 20px;}
+/* ───── PROGRESS PANEL ───── */
+.progress-panel{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r2);padding:24px;margin-top:14px;
+  display:none;
+}
+.pp-header{
+  display:flex;align-items:center;gap:12px;margin-bottom:20px;
+  padding-bottom:16px;border-bottom:1px solid var(--border);
+}
+.pp-spinner{
+  width:36px;height:36px;border:3px solid var(--border2);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .7s linear infinite;flex-shrink:0;
+}
+.pp-spinner.done{border-color:var(--green);border-top-color:var(--green);animation:none;}
 @keyframes spin{to{transform:rotate(360deg)}}
-.status-msg{font-size:14px;color:var(--muted);margin-bottom:16px;}
-.prog-steps{display:flex;flex-direction:column;gap:9px;text-align:left;max-width:280px;margin:0 auto;}
-.ps{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);transition:color .3s;}
-.ps.active{color:var(--text);}.ps.done{color:var(--green);}
-.psdot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0;transition:background .3s;}
-.ps.active .psdot{background:var(--accent);box-shadow:0 0 8px var(--accent);}
-.ps.done .psdot{background:var(--green);}
+.pp-title-wrap{flex:1;}
+.pp-title{font-size:14px;font-weight:700;margin-bottom:2px;}
+.pp-subtitle{font-size:12px;color:var(--muted2);}
 
-/* Done */
-.done-card{display:none;background:linear-gradient(135deg,rgba(46,196,182,.08),rgba(46,196,182,.02));border:1px solid rgba(46,196,182,.18);border-radius:12px;padding:28px;margin-top:14px;text-align:center;}
-.done-icon{font-size:46px;margin-bottom:12px;}
-.done-t{font-size:20px;font-weight:800;margin-bottom:6px;}
-.done-s{font-size:13px;color:var(--muted);margin-bottom:22px;}
-.btn-dl{display:flex;align-items:center;justify-content:center;gap:9px;padding:14px 32px;background:var(--green);color:#fff;border:none;border-radius:11px;font-size:15px;font-weight:800;cursor:pointer;width:100%;transition:transform .15s,box-shadow .15s;box-shadow:0 4px 20px rgba(46,196,182,.28);margin-bottom:16px;}
+/* Stage list */
+.stage-list{display:flex;flex-direction:column;gap:4px;}
+.stage{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:8px;
+  font-size:13px;color:var(--muted2);
+  transition:all .25s;
+}
+.stage.active{background:var(--s1);border:1px solid var(--border2);color:var(--text);}
+.stage.done{color:var(--green);}
+.stage-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--border2);flex-shrink:0;transition:all .25s;
+}
+.stage.active .stage-dot{background:var(--accent);box-shadow:0 0 10px var(--accent);}
+.stage.done .stage-dot{background:var(--green);}
+.stage-icon{font-size:14px;width:20px;text-align:center;flex-shrink:0;}
+.stage-text{flex:1;}
+.stage-time{font-size:11px;color:var(--muted);}
+
+/* Slide log sub-list */
+.slide-log{
+  margin-top:4px;margin-left:30px;
+  display:flex;flex-direction:column;gap:2px;
+  max-height:0;overflow:hidden;transition:max-height .4s ease;
+}
+.slide-log.open{max-height:600px;}
+.log-item{
+  font-size:11px;color:var(--muted2);padding:3px 8px;
+  border-left:2px solid var(--border2);
+  display:flex;align-items:center;gap:6px;
+  transition:all .2s;
+}
+.log-item.new{color:var(--text);border-left-color:var(--blue);}
+.log-item.done{color:var(--green);border-left-color:var(--green);}
+.log-item .li-dot{width:5px;height:5px;border-radius:50%;background:var(--muted);flex-shrink:0;}
+.log-item.new .li-dot{background:var(--blue);}
+.log-item.done .li-dot{background:var(--green);}
+
+/* ───── DONE CARD ───── */
+.done-card{
+  background:linear-gradient(135deg,var(--green2),rgba(46,196,182,.03));
+  border:1px solid rgba(46,196,182,.2);
+  border-radius:var(--r2);padding:28px;margin-top:14px;
+  text-align:center;display:none;
+}
+.done-icon{font-size:44px;margin-bottom:12px;}
+.done-title{font-size:20px;font-weight:800;margin-bottom:6px;}
+.done-sub{font-size:13px;color:var(--muted2);margin-bottom:22px;}
+.btn-dl{
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  padding:14px 32px;background:var(--green);color:#fff;
+  border:none;border-radius:var(--r);font-size:15px;font-weight:800;
+  cursor:pointer;width:100%;
+  transition:transform .15s,box-shadow .15s;
+  box-shadow:0 4px 20px rgba(46,196,182,.28);margin-bottom:16px;
+}
 .btn-dl:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(46,196,182,.38);}
-.vrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.vbox{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:12px;text-align:center;}
-.vn{font-size:26px;font-weight:900;}.vl{font-size:11px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;}
-.vbox.vp .vn{color:var(--green);}.vbox.vf .vn{color:var(--accent);}
-.reset{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;text-decoration:underline;margin-top:12px;}
-.err{background:rgba(230,57,70,.07);border:1px solid rgba(230,57,70,.18);border-radius:9px;padding:14px;font-size:12px;color:#f4868d;white-space:pre-wrap;word-break:break-word;margin-top:14px;display:none;text-align:left;}
+.val-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.val-box{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:12px;text-align:center;}
+.val-num{font-size:26px;font-weight:900;}.val-lbl{font-size:10px;color:var(--muted2);margin-top:3px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
+.val-box.vp .val-num{color:var(--green);}.val-box.vf .val-num{color:var(--accent);}
+.btn-reset{background:none;border:none;color:var(--muted2);font-size:12px;cursor:pointer;text-decoration:underline;margin-top:12px;}
+
+/* ───── ERROR ───── */
+.err-box{
+  background:rgba(230,57,70,.07);border:1px solid rgba(230,57,70,.18);
+  border-radius:var(--r);padding:14px 16px;font-size:12px;color:#f4868d;
+  white-space:pre-wrap;word-break:break-word;margin-top:14px;display:none;
+}
 
 footer{text-align:center;padding:28px;font-size:12px;color:var(--muted);border-top:1px solid var(--border);position:relative;z-index:1;}
 </style>
 </head>
 <body>
 
-<nav>
-  <div class="logo">T</div>
-  <div class="nav-t">TVS CPS Automation</div>
-  <div class="nav-s">BikeDekho · Zigwheels Deck Generator</div>
-</nav>
+<!-- ══════════ ONE-TIME TOKEN SETUP OVERLAY ══════════ -->
+<div id="setup-overlay">
+  <div class="setup-box">
+    <div class="setup-logo">T</div>
+    <h2>One-Time Setup</h2>
+    <p class="sub">Connect your GitHub account so this tool can trigger the deck pipeline. Takes 2 minutes — never needed again.</p>
 
-<div class="hero">
-  <div class="pill">⚡ GitHub Actions Powered</div>
-  <h1>Upload Excel.<br><em>Get your Deck.</em></h1>
-  <p class="sub">Drop 2 monthly Excel files. The deck is generated automatically via GitHub and ready to download.</p>
-  <div class="steps">
-    <div class="step"><span class="sn">1</span>Connect GitHub</div>
-    <span class="arrow">→</span>
-    <div class="step"><span class="sn">2</span>Upload 2 Excel files</div>
-    <span class="arrow">→</span>
-    <div class="step"><span class="sn">3</span>Download Deck</div>
-  </div>
-</div>
-
-<main>
-
-  <!-- GitHub Token -->
-  <div class="token-card" id="token-section">
-    <h3>🔑 GitHub Access (one-time setup)</h3>
-    <p>Enter a GitHub Personal Access Token with <strong>repo + actions</strong> permissions. Stored only in your browser — never sent anywhere except GitHub's API.</p>
-    <div class="token-row">
-      <input type="password" class="token-inp" id="token-inp" placeholder="github_pat_..." autocomplete="off">
-      <button class="token-btn" onclick="saveToken()">Save</button>
-    </div>
-    <div class="token-ok" id="token-ok">✓ Token saved — ready to generate decks</div>
-    <p style="margin-top:10px;font-size:11px;color:var(--muted);">
-      Create token at <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" style="color:var(--blue);">github.com/settings/tokens</a> → Fine-grained → Repo: <code>tvs-cps-automation</code> → Permissions: Contents (Read/Write), Actions (Write)
-    </p>
-  </div>
-
-  <!-- Upload form -->
-  <form id="gen-form">
-    <div class="upload-card">
-      <div class="ul-label">Monthly Excel Files</div>
-      <div class="grid2">
-        <div class="drop" id="box-curr">
-          <input type="file" name="curr" accept=".xlsb,.xlsx,.xls" required onchange="onFile(this,'box-curr','fn-curr',true)">
-          <div class="di">📊</div>
-          <div class="dl">Current FY</div>
-          <div class="dh">FY 2026-27 · .xlsb</div>
-          <div class="df" id="fn-curr"></div>
+    <div class="setup-steps">
+      <div class="ss">
+        <div class="ss-num">1</div>
+        <div class="ss-body">
+          <div class="ss-title">Create a GitHub Personal Access Token</div>
+          <div class="ss-desc">
+            Go to <a href="https://github.com/settings/personal-access-tokens/new" target="_blank">GitHub → Settings → Tokens (classic)</a><br>
+            Select scope: <code>repo</code> (tick the top-level checkbox)<br>
+            Click <strong>Generate token</strong> and copy it.
+          </div>
         </div>
-        <div class="drop" id="box-prev">
-          <input type="file" name="prev" accept=".xlsb,.xlsx,.xls" required onchange="onFile(this,'box-prev','fn-prev',false)">
-          <div class="di">📋</div>
-          <div class="dl">Previous FY</div>
-          <div class="dh">FY 2025-26 · .xlsb</div>
-          <div class="df" id="fn-prev"></div>
+      </div>
+      <div class="ss">
+        <div class="ss-num">2</div>
+        <div class="ss-body">
+          <div class="ss-title">Paste your token below</div>
+          <div class="ss-desc">Stored only in your browser. Never sent anywhere except GitHub's own API.</div>
+          <div class="token-row">
+            <input type="password" class="token-inp" id="setup-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+            <button class="btn-save" onclick="saveSetup()">Save & Continue →</button>
+          </div>
+          <div class="setup-err" id="setup-err"></div>
         </div>
       </div>
     </div>
+  </div>
+</div>
 
+<!-- ══════════ NAV ══════════ -->
+<nav>
+  <div class="nav-logo">T</div>
+  <span class="nav-title">TVS CPS Automation</span>
+  <div class="nav-right">
+    <div class="nav-status"><span class="dot"></span>GitHub Actions</div>
+    <button class="btn-rekey" onclick="showSetup()">Change Token</button>
+  </div>
+</nav>
+
+<!-- ══════════ HERO ══════════ -->
+<div class="hero">
+  <div class="hero-badge">⚡ Powered by GitHub Actions</div>
+  <h1>Upload Excel.<br><span>Get your Deck.</span></h1>
+  <p class="hero-sub">Drop the two monthly Excel files and the full Performance Deck is generated automatically — slide by slide.</p>
+  <div class="flow">
+    <div class="flow-step"><span class="n">1</span>Upload 2 Excel files</div>
+    <span class="flow-arr">→</span>
+    <div class="flow-step"><span class="n">2</span>Click Generate</div>
+    <span class="flow-arr">→</span>
+    <div class="flow-step"><span class="n">3</span>Watch live progress</div>
+    <span class="flow-arr">→</span>
+    <div class="flow-step"><span class="n">4</span>Download Deck</div>
+  </div>
+</div>
+
+<!-- ══════════ MAIN ══════════ -->
+<main>
+  <form id="gen-form">
+    <div class="upload-card">
+      <div class="card-label">Monthly Excel Files</div>
+      <div class="grid2">
+        <div class="drop" id="box-curr">
+          <input type="file" name="curr" accept=".xlsb,.xlsx,.xls" required onchange="onFile(this,'box-curr','fn-curr',true)">
+          <div class="drop-icon">📊</div>
+          <div class="drop-label">Current FY</div>
+          <div class="drop-hint">FY 2026-27 · .xlsb</div>
+          <div class="drop-fname" id="fn-curr"></div>
+        </div>
+        <div class="drop" id="box-prev">
+          <input type="file" name="prev" accept=".xlsb,.xlsx,.xls" required onchange="onFile(this,'box-prev','fn-prev',false)">
+          <div class="drop-icon">📋</div>
+          <div class="drop-label">Previous FY</div>
+          <div class="drop-hint">FY 2025-26 · .xlsb</div>
+          <div class="drop-fname" id="fn-prev"></div>
+        </div>
+      </div>
+    </div>
     <button type="submit" class="btn-gen" id="submit-btn">⚡ &nbsp;Generate Deck</button>
   </form>
 
-  <!-- Progress -->
-  <div class="status-card" id="status-card">
-    <div class="spinner"></div>
-    <div class="status-msg" id="status-msg">Starting…</div>
-    <div class="prog-steps">
-      <div class="ps" id="p1"><span class="psdot"></span>Uploading Excel files to GitHub</div>
-      <div class="ps" id="p2"><span class="psdot"></span>Triggering Actions workflow</div>
-      <div class="ps" id="p3"><span class="psdot"></span>Reading Excel &amp; computing KPIs</div>
-      <div class="ps" id="p4"><span class="psdot"></span>Updating charts &amp; slides</div>
-      <div class="ps" id="p5"><span class="psdot"></span>Validating numbers</div>
-      <div class="ps" id="p6"><span class="psdot"></span>Packaging deck</div>
+  <!-- PROGRESS PANEL -->
+  <div class="progress-panel" id="progress-panel">
+    <div class="pp-header">
+      <div class="pp-spinner" id="pp-spinner"></div>
+      <div class="pp-title-wrap">
+        <div class="pp-title" id="pp-title">Preparing…</div>
+        <div class="pp-subtitle" id="pp-sub">Starting pipeline</div>
+      </div>
+    </div>
+    <div class="stage-list" id="stage-list">
+      <div class="stage" id="st-upload"><span class="stage-dot"></span><span class="stage-icon">☁️</span><span class="stage-text">Uploading Excel files to GitHub</span></div>
+      <div class="stage" id="st-trigger"><span class="stage-dot"></span><span class="stage-icon">⚡</span><span class="stage-text">Triggering GitHub Actions workflow</span></div>
+      <div class="stage" id="st-setup"><span class="stage-dot"></span><span class="stage-icon">🔧</span><span class="stage-text">Setting up Python environment</span></div>
+      <div class="stage" id="st-extract"><span class="stage-dot"></span><span class="stage-icon">📊</span><span class="stage-text">Reading Excel &amp; computing KPIs</span></div>
+      <div class="stage" id="st-charts"><span class="stage-dot"></span><span class="stage-icon">📈</span><span class="stage-text">Updating charts &amp; slides</span>
+        <div class="slide-log" id="slide-log"></div>
+      </div>
+      <div class="stage" id="st-validate"><span class="stage-dot"></span><span class="stage-icon">✅</span><span class="stage-text">Validating numbers</span></div>
+      <div class="stage" id="st-pack"><span class="stage-dot"></span><span class="stage-icon">📦</span><span class="stage-text">Packaging deck</span></div>
     </div>
   </div>
 
-  <!-- Done -->
+  <!-- DONE CARD -->
   <div class="done-card" id="done-card">
     <div class="done-icon">🎉</div>
-    <div class="done-t">Deck Ready!</div>
-    <div class="done-s" id="done-msg">Your performance deck has been generated.</div>
+    <div class="done-title">Deck Ready!</div>
+    <div class="done-sub" id="done-sub">Your performance deck has been generated successfully.</div>
     <button class="btn-dl" id="dl-btn">⬇️ &nbsp;Download Deck (.pptx)</button>
-    <div class="vrow">
-      <div class="vbox vp"><div class="vn" id="v-pass">—</div><div class="vl">Checks Passed</div></div>
-      <div class="vbox vf"><div class="vn" id="v-fail">—</div><div class="vl">Checks Failed</div></div>
+    <div class="val-row">
+      <div class="val-box vp"><div class="val-num" id="v-pass">—</div><div class="val-lbl">Checks Passed</div></div>
+      <div class="val-box vf"><div class="val-num" id="v-fail">—</div><div class="val-lbl">Checks Failed</div></div>
     </div>
-    <button class="reset" onclick="resetAll()">Generate another deck</button>
+    <button class="btn-reset" onclick="resetAll()">Generate another deck</button>
   </div>
 
-  <div class="err" id="err-box"></div>
-
+  <div class="err-box" id="err-box"></div>
 </main>
 
 <footer>TVS CPS Performance Deck Automation · Powered by GitHub Actions</footer>
@@ -190,38 +400,49 @@ footer{text-align:center;padding:28px;font-size:12px;color:var(--muted);border-t
 const OWNER = 'kunalkaushal-stack';
 const REPO  = 'tvs-cps-automation';
 const API   = 'https://api.github.com';
+let TOKEN   = '';
 
-// ── Token ──
-let TOKEN = localStorage.getItem('gh_token') || '';
-function saveToken() {
-  TOKEN = document.getElementById('token-inp').value.trim();
-  if (!TOKEN) return alert('Please enter a token.');
-  localStorage.setItem('gh_token', TOKEN);
-  document.getElementById('token-ok').style.display = 'block';
-  document.getElementById('token-inp').value = '';
+// ── Token setup ──────────────────────────────────────────
+function loadToken() {
+  TOKEN = localStorage.getItem('gh_pat') || '';
+  if (TOKEN) document.getElementById('setup-overlay').style.display = 'none';
 }
-if (TOKEN) {
-  document.getElementById('token-ok').style.display = 'block';
-  document.getElementById('token-inp').placeholder = '(token saved)';
+function saveSetup() {
+  const val = document.getElementById('setup-token').value.trim();
+  const err = document.getElementById('setup-err');
+  if (!val.startsWith('ghp_') && !val.startsWith('github_pat_')) {
+    err.style.display = 'block';
+    err.textContent = 'Token should start with ghp_ or github_pat_';
+    return;
+  }
+  TOKEN = val;
+  localStorage.setItem('gh_pat', TOKEN);
+  document.getElementById('setup-overlay').style.display = 'none';
 }
+function showSetup() {
+  document.getElementById('setup-token').value = '';
+  document.getElementById('setup-overlay').style.display = 'flex';
+}
+loadToken();
 
-// ── Auto-detect month ──
+// ── Month detection ──────────────────────────────────────
 let detectedMonth = 7;
-const MONTHS = ['apr','may','jun','jul','aug','sep','oct','nov','dec','jan','feb','mar'];
-function onFile(inp, boxId, fnId, detectMonth) {
+const MONTH_ABBRS = ['apr','may','jun','jul','aug','sep','oct','nov','dec','jan','feb','mar'];
+const MONTH_NAMES = ['','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
+
+function onFile(inp, boxId, fnId, detect) {
   if (!inp.files.length) return;
   const name = inp.files[0].name;
   document.getElementById(boxId).classList.add('ready');
   document.getElementById(fnId).textContent = name;
-  if (detectMonth) {
+  if (detect) {
     const low = name.toLowerCase();
-    for (let i = 0; i < MONTHS.length; i++) {
-      if (low.includes(MONTHS[i])) { detectedMonth = i + 1; break; }
+    for (let i = 0; i < MONTH_ABBRS.length; i++) {
+      if (low.includes(MONTH_ABBRS[i])) { detectedMonth = i + 1; break; }
     }
   }
 }
 
-// Drag & drop
 document.querySelectorAll('.drop').forEach(z => {
   z.addEventListener('dragover', e => { e.preventDefault(); z.classList.add('over'); });
   z.addEventListener('dragleave', () => z.classList.remove('over'));
@@ -235,7 +456,7 @@ document.querySelectorAll('.drop').forEach(z => {
   });
 });
 
-// ── GitHub API helpers ──
+// ── GitHub API ───────────────────────────────────────────
 async function ghFetch(path, opts = {}) {
   const r = await fetch(API + path, {
     ...opts,
@@ -248,26 +469,20 @@ async function ghFetch(path, opts = {}) {
   });
   if (!r.ok) {
     const t = await r.text().catch(() => '');
-    throw new Error(`GitHub API ${r.status}: ${t.slice(0,200)}`);
+    throw new Error(`GitHub API ${r.status}: ${t.slice(0, 300)}`);
   }
-  // 204 No Content (e.g. workflow_dispatch) has no body — return null
   if (r.status === 204) return null;
   const text = await r.text();
   return text ? JSON.parse(text) : null;
 }
-async function ghFetchBin(path) {
-  const r = await fetch(API + path, {
-    headers: {
-      'Authorization': 'Bearer ' + TOKEN,
-      'Accept': 'application/octet-stream',
-      'X-GitHub-Api-Version': '2022-11-28',
-    },
+async function ghFetchBin(url) {
+  const r = await fetch(url, {
+    headers: { 'Authorization': 'Bearer ' + TOKEN },
     redirect: 'follow',
   });
-  if (!r.ok) throw new Error(`Download failed: ${r.status}`);
+  if (!r.ok) throw new Error(`Download ${r.status}`);
   return r.blob();
 }
-
 function readBase64(file) {
   return new Promise((res, rej) => {
     const fr = new FileReader();
@@ -276,150 +491,252 @@ function readBase64(file) {
     fr.readAsDataURL(file);
   });
 }
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-// ── Step helpers ──
-let stepsDone = 0;
-function setStep(n, status) { // status: active | done
-  for (let i = 1; i <= 6; i++) {
-    const el = document.getElementById('p' + i);
-    el.classList.remove('active', 'done');
-    if (i < n) el.classList.add('done');
-    if (i === n) el.classList.add(status);
+// ── Stage tracker ────────────────────────────────────────
+const STAGES = ['upload','trigger','setup','extract','charts','validate','pack'];
+let currentStage = -1;
+function setStage(id, state) { // state: active | done
+  const el = document.getElementById('st-' + id);
+  if (!el) return;
+  el.classList.remove('active', 'done');
+  el.classList.add(state);
+}
+function advanceTo(idx) {
+  for (let i = 0; i < idx; i++) setStage(STAGES[i], 'done');
+  if (idx < STAGES.length) setStage(STAGES[idx], 'active');
+  currentStage = idx;
+}
+function setPPHeader(title, sub) {
+  document.getElementById('pp-title').textContent = title;
+  document.getElementById('pp-sub').textContent = sub;
+}
+
+// ── Slide log (live) ─────────────────────────────────────
+const SLIDE_LOG_MAP = {
+  'chart1': '📊 Leads trend chart',
+  'chart2': '📊 Retails trend chart',
+  'chart3': '📊 Conversion % chart',
+  'chart4': '🗺️ Zone overview bar chart',
+  'chart5': '🌏 NSM East zone chart',
+  'chart6': '🌏 NSM South zone chart',
+  'chart7': '🌏 NSM North zone chart',
+  'chart8': '🌏 NSM West zone chart',
+  'chart9': '🌏 NSM South 2 zone chart',
+  'chart10': '👤 ISM comparison chart',
+  'slide13': '📋 Leads KPI callouts',
+  'slide14': '📋 Retails KPI callouts',
+};
+// chart11+ are state trends
+function chartLabel(raw) {
+  for (const [key, label] of Object.entries(SLIDE_LOG_MAP)) {
+    if (raw.includes(key)) return label;
   }
-  document.getElementById('status-msg').textContent = el_text(n);
-}
-function el_text(n) {
-  return ['','Uploading files to GitHub…','Triggering workflow…','Pipeline running: reading Excel…','Updating charts & slides…','Validating numbers…','Packaging deck…'][n] || '…';
+  const m = raw.match(/chart(\d+)/);
+  if (m) return `📈 State trend chart ${m[1]}`;
+  const s = raw.match(/slide(\d+)/);
+  if (s) return `📋 Slide ${s[1]} table`;
+  return raw;
 }
 
-// ── MAIN SUBMIT ──
+let slideLogItems = {};
+function addSlideLog(raw) {
+  const label = chartLabel(raw);
+  if (slideLogItems[label]) {
+    slideLogItems[label].classList.remove('new');
+    slideLogItems[label].classList.add('done');
+    slideLogItems[label].querySelector('.li-dot').style.background = 'var(--green)';
+    return;
+  }
+  const el = document.createElement('div');
+  el.className = 'log-item new';
+  el.innerHTML = `<span class="li-dot"></span>${label}`;
+  slideLogItems[label] = el;
+  const log = document.getElementById('slide-log');
+  log.classList.add('open');
+  log.appendChild(el);
+  setTimeout(() => { el.classList.remove('new'); el.classList.add('done'); }, 1500);
+}
+
+// ── Parse workflow logs ───────────────────────────────────
+async function fetchJobLogs(jobId) {
+  try {
+    const r = await fetch(`${API}/repos/${OWNER}/${REPO}/actions/jobs/${jobId}/logs`, {
+      headers: {
+        'Authorization': 'Bearer ' + TOKEN,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+      redirect: 'follow',
+    });
+    if (!r.ok) return '';
+    return await r.text();
+  } catch { return ''; }
+}
+
+function parseLogs(text) {
+  const lines = text.split('\n');
+  for (const line of lines) {
+    // Pipeline progress lines: "[deck] chartX ... updated"
+    if (line.includes('[deck]')) {
+      const m = line.match(/\[deck\]\s+(.+)/);
+      if (m) addSlideLog(m[1]);
+    }
+    // Stage detection from log output
+    if (line.includes('Extracting data') || line.includes('Reading Excel')) {
+      if (currentStage < 3) { advanceTo(3); setPPHeader('Reading Excel files', 'Computing KPIs, zones, states…'); }
+    }
+    if (line.includes('Updating deck') || line.includes('Updating charts')) {
+      if (currentStage < 4) { advanceTo(4); setPPHeader('Updating charts & slides', 'Applying data to each slide…'); }
+    }
+    if (line.includes('Validation') || line.includes('validate')) {
+      if (currentStage < 5) { advanceTo(5); setPPHeader('Validating', 'Cross-checking numbers…'); }
+    }
+    if (line.includes('Repacked') || line.includes('Done in')) {
+      if (currentStage < 6) { advanceTo(6); setPPHeader('Packaging', 'Finalising deck…'); }
+    }
+  }
+}
+
+// ── MAIN SUBMIT ──────────────────────────────────────────
 document.getElementById('gen-form').addEventListener('submit', async e => {
   e.preventDefault();
-  if (!TOKEN) { alert('Please save your GitHub token first.'); return; }
+  if (!TOKEN) { showSetup(); return; }
 
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
-  document.getElementById('status-card').style.display = 'block';
+  slideLogItems = {};
+  document.getElementById('slide-log').innerHTML = '';
+  document.getElementById('slide-log').classList.remove('open');
+  document.getElementById('progress-panel').style.display = 'block';
   document.getElementById('done-card').style.display = 'none';
   document.getElementById('err-box').style.display = 'none';
+  document.getElementById('pp-spinner').classList.remove('done');
+  STAGES.forEach(s => { const el = document.getElementById('st-'+s); if(el) el.classList.remove('active','done'); });
 
   const currFile = e.target.curr.files[0];
   const prevFile = e.target.prev.files[0];
 
   try {
-    // 1. Get master SHA
-    setStep(1, 'active');
+    // 1. Upload files
+    advanceTo(0); setPPHeader('Uploading to GitHub', 'Reading and encoding Excel files…');
     const ref = await ghFetch(`/repos/${OWNER}/${REPO}/git/ref/heads/master`);
     const masterSha = ref.object.sha;
-
-    // 2. Create temp branch
-    const branchName = `upload-${Date.now()}`;
+    const branch = `upload-${Date.now()}`;
     await ghFetch(`/repos/${OWNER}/${REPO}/git/refs`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ref: `refs/heads/${branchName}`, sha: masterSha }),
+      body: JSON.stringify({ ref: `refs/heads/${branch}`, sha: masterSha }),
     });
-
-    // 3. Commit Excel files to temp branch
-    const [currB64, prevB64] = await Promise.all([readBase64(currFile), readBase64(prevFile)]);
+    const [cb64, pb64] = await Promise.all([readBase64(currFile), readBase64(prevFile)]);
     await ghFetch(`/repos/${OWNER}/${REPO}/contents/curr.xlsb`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Upload curr.xlsb', content: currB64, branch: branchName }),
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'Upload curr.xlsb', content: cb64, branch }),
     });
     await ghFetch(`/repos/${OWNER}/${REPO}/contents/prev.xlsb`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Upload prev.xlsb', content: prevB64, branch: branchName }),
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'Upload prev.xlsb', content: pb64, branch }),
     });
-    setStep(1, 'done'); setStep(2, 'active');
+    setStage('upload', 'done');
 
-    // 4. Trigger workflow
+    // 2. Trigger workflow
+    advanceTo(1); setPPHeader('Triggering workflow', 'Starting GitHub Actions runner…');
     const triggerTime = new Date().toISOString();
     await ghFetch(`/repos/${OWNER}/${REPO}/actions/workflows/generate.yml/dispatches`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ref: 'master',
-        inputs: { upload_branch: branchName, month_idx: String(detectedMonth) },
-      }),
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ref: 'master', inputs: { upload_branch: branch, month_idx: String(detectedMonth) } }),
     });
-    setStep(2, 'done'); setStep(3, 'active');
 
-    // 5. Poll for run to appear and complete
+    // 3. Wait for run to appear
     let runId = null;
-    for (let attempt = 0; attempt < 60 && !runId; attempt++) {
+    for (let i = 0; i < 60 && !runId; i++) {
       await sleep(3000);
       const runs = await ghFetch(`/repos/${OWNER}/${REPO}/actions/runs?event=workflow_dispatch&per_page=10`);
-      for (const run of runs.workflow_runs) {
-        const rt = new Date(run.created_at).getTime();
-        const tt = new Date(triggerTime).getTime();
-        if (rt >= tt - 10000) { runId = run.id; break; }
+      for (const run of (runs.workflow_runs || [])) {
+        if (new Date(run.created_at) >= new Date(triggerTime) - 15000) { runId = run.id; break; }
       }
     }
-    if (!runId) throw new Error('Workflow run not found. Check GitHub Actions tab.');
+    if (!runId) throw new Error('Workflow run not found. Check the Actions tab on GitHub.');
+    setStage('trigger', 'done');
 
-    // 6. Wait for run to finish
-    let run, stepIdx = 3;
-    for (let attempt = 0; attempt < 120; attempt++) {
-      await sleep(5000);
+    // 4. Poll run + live log parsing
+    advanceTo(2); setPPHeader('Running pipeline', 'GitHub Actions is setting up Python…');
+    let run, jobId = null, lastLogLen = 0;
+
+    for (let attempt = 0; attempt < 150; attempt++) {
+      await sleep(4000);
       run = await ghFetch(`/repos/${OWNER}/${REPO}/actions/runs/${runId}`);
+
+      // Get job ID for log polling
+      if (!jobId) {
+        const jobs = await ghFetch(`/repos/${OWNER}/${REPO}/actions/runs/${runId}/jobs`);
+        if (jobs.jobs && jobs.jobs.length) jobId = jobs.jobs[0].id;
+      }
+
+      // Parse live logs
+      if (jobId) {
+        const logs = await fetchJobLogs(jobId);
+        if (logs.length > lastLogLen) {
+          parseLogs(logs.slice(lastLogLen));
+          lastLogLen = logs.length;
+        }
+      }
+
       if (run.status === 'completed') break;
-      // Advance progress steps as time passes
-      if (attempt > 5 && stepIdx === 3)  { setStep(4, 'active'); stepIdx = 4; }
-      if (attempt > 12 && stepIdx === 4) { setStep(5, 'active'); stepIdx = 5; }
-      if (attempt > 18 && stepIdx === 5) { setStep(6, 'active'); stepIdx = 6; }
     }
 
     if (run.conclusion !== 'success') {
-      throw new Error(`Workflow ended with: ${run.conclusion}. Check https://github.com/${OWNER}/${REPO}/actions/runs/${runId}`);
+      throw new Error(`Pipeline failed (${run.conclusion}).\n\nSee details: https://github.com/${OWNER}/${REPO}/actions/runs/${runId}`);
     }
-    setStep(6, 'done');
 
-    // 7. Download artifact
-    const artifacts = await ghFetch(`/repos/${OWNER}/${REPO}/actions/runs/${runId}/artifacts`);
-    const art = artifacts.artifacts.find(a => a.name === 'TVS-CPS-Deck');
+    advanceTo(6); setStage('pack', 'done');
+    document.getElementById('pp-spinner').classList.add('done');
+    setPPHeader('Done!', 'Deck generated successfully');
+
+    // 5. Download artifact
+    const arts = await ghFetch(`/repos/${OWNER}/${REPO}/actions/runs/${runId}/artifacts`);
+    const art = (arts.artifacts || []).find(a => a.name === 'TVS-CPS-Deck');
     if (!art) throw new Error('Artifact not found in completed run.');
 
-    const blob = await ghFetchBin(`/repos/${OWNER}/${REPO}/actions/artifacts/${art.id}/zip`);
-    const monthNames = ['','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
-    const fname = `TVS_CPS_${monthNames[detectedMonth] || 'Deck'}.pptx`;
+    const blob = await ghFetchBin(`${API}/repos/${OWNER}/${REPO}/actions/artifacts/${art.id}/zip`);
 
     document.getElementById('dl-btn').onclick = () => {
-      // artifact is a zip — tell the user to unzip it
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = fname + '.zip'; a.click();
+      a.href = url;
+      a.download = `TVS_CPS_${MONTH_NAMES[detectedMonth]}.zip`;
+      a.click();
       setTimeout(() => URL.revokeObjectURL(url), 5000);
     };
 
-    document.getElementById('done-msg').textContent = `Deck generated for ${monthNames[detectedMonth]}. The download is a .zip — the .pptx is inside.`;
+    document.getElementById('done-sub').textContent =
+      `${MONTH_NAMES[detectedMonth]} deck ready. The download is a .zip — the .pptx is inside.`;
     document.getElementById('v-pass').textContent = '✓';
     document.getElementById('v-fail').textContent = '0';
-    document.getElementById('status-card').style.display = 'none';
     document.getElementById('done-card').style.display = 'block';
     btn.disabled = false;
 
-  } catch(err) {
-    document.getElementById('status-card').style.display = 'none';
+  } catch (err) {
     const eb = document.getElementById('err-box');
     eb.style.display = 'block';
     eb.textContent = '⚠️  ' + err.message;
     btn.disabled = false;
+    document.getElementById('pp-spinner').classList.add('done');
   }
 });
-
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 function resetAll() {
   document.getElementById('gen-form').reset();
   document.querySelectorAll('.drop').forEach(z => z.classList.remove('ready'));
-  document.querySelectorAll('.df').forEach(f => f.textContent = '');
-  document.querySelectorAll('.ps').forEach(p => p.classList.remove('active','done'));
-  document.getElementById('status-card').style.display = 'none';
+  document.querySelectorAll('.drop-fname').forEach(f => f.textContent = '');
+  STAGES.forEach(s => { const el = document.getElementById('st-'+s); if(el) el.classList.remove('active','done'); });
+  document.getElementById('progress-panel').style.display = 'none';
   document.getElementById('done-card').style.display = 'none';
   document.getElementById('err-box').style.display = 'none';
   document.getElementById('submit-btn').disabled = false;
+  document.getElementById('slide-log').innerHTML = '';
+  document.getElementById('slide-log').classList.remove('open');
+  slideLogItems = {};
   detectedMonth = 7;
 }
 </script>
