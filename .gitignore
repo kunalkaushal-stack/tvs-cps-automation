@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+uploads/
+outputs/
+template.pptx
+*.pptx
+*.xlsb
+*.xlsx
+*.xls
+.env
+venv/
+*.egg-info/
+dist/
+build/
