@@ -2,320 +2,425 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TVS CPS Deck Generator</title>
 <style>
-  :root {
-    --bg: #0d0f18;
-    --surface: #13161f;
-    --card: #1a1d2b;
-    --border: #252836;
-    --accent: #e63946;
-    --blue: #4895ef;
-    --green: #2a9d8f;
-    --text: #eaeaea;
-    --muted: #6b7280;
-    --radius: 16px;
-  }
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08090f;
+  --s1:#0e1018;
+  --s2:#14161f;
+  --card:#181b26;
+  --border:#22263a;
+  --accent:#e63946;
+  --accent-soft:rgba(230,57,70,.12);
+  --blue:#4895ef;
+  --green:#2ec4b6;
+  --text:#f0f0f5;
+  --muted:#5c6180;
+  --r:14px;
+}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── BACKGROUND GRID ── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(72,149,239,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(72,149,239,.04) 1px,transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;z-index:0;
+}
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
+/* ── NAV ── */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(8,9,15,.85);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:14px 32px;
+  display:flex;align-items:center;gap:12px;
+}
+.nav-logo{
+  width:34px;height:34px;border-radius:9px;
+  background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:16px;color:#fff;flex-shrink:0;
+}
+.nav-title{font-size:15px;font-weight:700;}
+.nav-sub{font-size:12px;color:var(--muted);margin-left:auto;}
 
-  .wrap { width: 100%; max-width: 560px; }
+/* ── HERO ── */
+.hero{
+  text-align:center;
+  padding:72px 24px 56px;
+  position:relative;z-index:1;
+}
+.hero-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent-soft);
+  border:1px solid rgba(230,57,70,.25);
+  border-radius:100px;
+  padding:6px 18px;
+  font-size:12px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;color:#f4868d;
+  margin-bottom:24px;
+}
+.hero h1{
+  font-size:clamp(32px,6vw,56px);
+  font-weight:900;line-height:1.1;
+  letter-spacing:-.02em;
+  margin-bottom:18px;
+}
+.hero h1 em{
+  font-style:normal;
+  background:linear-gradient(135deg,#e63946,#ff6b6b);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero p{
+  font-size:17px;color:var(--muted);
+  max-width:480px;margin:0 auto 40px;line-height:1.7;
+}
+.hero-steps{
+  display:flex;justify-content:center;align-items:center;
+  gap:0;flex-wrap:wrap;margin-bottom:0;
+}
+.hs{
+  display:flex;align-items:center;gap:10px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:100px;padding:8px 20px;
+  font-size:13px;color:var(--muted);
+}
+.hs-num{
+  width:22px;height:22px;border-radius:50%;
+  background:var(--accent);color:#fff;
+  font-size:11px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.hs-arrow{font-size:18px;color:var(--border);margin:0 8px;}
 
-  /* Header */
-  .header { text-align: center; margin-bottom: 40px; }
-  .tvs-badge {
-    display: inline-flex; align-items: center; gap: 10px;
-    background: var(--accent); color: #fff;
-    padding: 8px 20px; border-radius: 100px;
-    font-size: 13px; font-weight: 700; letter-spacing: .08em;
-    text-transform: uppercase; margin-bottom: 18px;
-  }
-  .header h1 { font-size: 28px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; }
-  .header h1 span { color: var(--accent); }
-  .header p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+/* ── MAIN CONTENT ── */
+.content{
+  max-width:640px;margin:0 auto;
+  padding:0 20px 100px;
+  position:relative;z-index:1;
+}
 
-  /* Upload card */
-  .uploads-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 28px;
-    margin-bottom: 16px;
-  }
+/* ── UPLOAD SECTION ── */
+.upload-section{margin-bottom:16px;}
+.section-label{
+  font-size:11px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);
+  margin-bottom:12px;
+}
 
-  .uploads-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 
-  .drop-zone {
-    border: 2px dashed var(--border);
-    border-radius: 12px;
-    padding: 28px 16px;
-    text-align: center;
-    cursor: pointer;
-    transition: all .2s ease;
-    position: relative;
-    overflow: hidden;
-    background: var(--surface);
-  }
-  .drop-zone input[type=file] {
-    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-  }
-  .drop-zone:hover { border-color: var(--blue); background: rgba(72,149,239,.06); }
-  .drop-zone.dragover { border-color: var(--blue); background: rgba(72,149,239,.1); transform: scale(1.01); }
-  .drop-zone.ready { border-color: var(--green); background: rgba(42,157,143,.08); }
+.drop{
+  background:var(--card);
+  border:2px dashed var(--border);
+  border-radius:var(--r);
+  padding:32px 20px;
+  text-align:center;cursor:pointer;
+  transition:all .2s;
+  position:relative;overflow:hidden;
+}
+.drop input[type=file]{
+  position:absolute;inset:0;opacity:0;
+  cursor:pointer;width:100%;height:100%;
+}
+.drop:hover{border-color:var(--blue);background:rgba(72,149,239,.06);}
+.drop.over{border-color:var(--blue);background:rgba(72,149,239,.1);transform:scale(1.02);}
+.drop.ready{border-color:var(--green);background:rgba(46,196,182,.07);border-style:solid;}
 
-  .dz-icon { font-size: 30px; margin-bottom: 10px; }
-  .dz-title { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
-  .dz-hint { font-size: 11px; color: var(--muted); }
-  .dz-filename { font-size: 12px; font-weight: 600; color: var(--green); margin-top: 6px; word-break: break-all; }
+.drop-icon{font-size:36px;margin-bottom:12px;display:block;}
+.drop-label{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.drop-hint{font-size:11px;color:var(--muted);}
+.drop-fname{
+  font-size:11px;font-weight:600;color:var(--green);
+  margin-top:8px;word-break:break-all;display:none;
+}
+.drop.ready .drop-fname{display:block;}
+.drop.ready .drop-hint{display:none;}
+.drop.ready .drop-icon{filter:grayscale(0);}
 
-  .drop-zone.ready .dz-hint { display: none; }
-  .drop-zone.ready .dz-icon { filter: hue-rotate(120deg); }
+/* ── TEMPLATE NOTICE ── */
+.tmpl-notice{
+  background:var(--s2);border:1px solid var(--border);
+  border-radius:10px;padding:12px 16px;
+  font-size:13px;color:var(--muted);
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:16px;
+}
+.tmpl-notice .dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);flex-shrink:0;
+}
+.tmpl-notice .dot.red{background:var(--accent);}
+.tmpl-upload-wrap{margin-bottom:16px;}
 
-  /* Submit */
-  .btn-generate {
-    width: 100%; padding: 16px;
-    background: var(--accent);
-    color: #fff; border: none;
-    border-radius: 12px;
-    font-size: 16px; font-weight: 800;
-    cursor: pointer; letter-spacing: .03em;
-    transition: transform .15s, opacity .15s;
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-  }
-  .btn-generate:hover { transform: translateY(-1px); opacity: .92; }
-  .btn-generate:active { transform: translateY(0); }
-  .btn-generate:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+/* ── GENERATE BUTTON ── */
+.btn-gen{
+  width:100%;padding:17px;
+  background:var(--accent);color:#fff;
+  border:none;border-radius:var(--r);
+  font-size:16px;font-weight:800;
+  cursor:pointer;letter-spacing:.02em;
+  transition:transform .15s,box-shadow .15s,opacity .15s;
+  box-shadow:0 4px 24px rgba(230,57,70,.35);
+  display:flex;align-items:center;justify-content:center;gap:10px;
+}
+.btn-gen:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(230,57,70,.45);}
+.btn-gen:active{transform:translateY(0);}
+.btn-gen:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none;}
 
-  /* Status card */
-  .status-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 32px;
-    margin-top: 16px; display: none; text-align: center;
-  }
+/* ── STATUS CARD ── */
+.status-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:36px 32px;
+  margin-top:16px;text-align:center;display:none;
+}
 
-  /* Spinner */
-  .spinner-wrap { margin-bottom: 18px; }
-  .spinner {
-    width: 44px; height: 44px;
-    border: 3px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin .7s linear infinite;
-    margin: 0 auto;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .status-msg { font-size: 14px; color: var(--muted); }
+.spinner{
+  width:48px;height:48px;
+  border:3px solid var(--border);
+  border-top-color:var(--accent);
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+  margin:0 auto 20px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-  /* Progress bar */
-  .progress-bar {
-    width: 100%; height: 4px;
-    background: var(--border); border-radius: 2px;
-    margin-top: 16px; overflow: hidden;
-  }
-  .progress-fill {
-    height: 100%; background: var(--accent);
-    border-radius: 2px;
-    width: 0%; transition: width .4s ease;
-    animation: indeterminate 1.6s ease infinite;
-  }
-  @keyframes indeterminate {
-    0%   { transform: translateX(-100%); width: 60%; }
-    100% { transform: translateX(200%);  width: 60%; }
-  }
+.status-steps{
+  display:flex;flex-direction:column;gap:8px;
+  text-align:left;margin:0 auto;max-width:280px;
+}
+.sstep{
+  display:flex;align-items:center;gap:10px;
+  font-size:13px;color:var(--muted);
+  transition:color .3s;
+}
+.sstep.active{color:var(--text);}
+.sstep.done{color:var(--green);}
+.sstep-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--border);flex-shrink:0;transition:background .3s;
+}
+.sstep.active .sstep-dot{background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.sstep.done .sstep-dot{background:var(--green);}
 
-  /* Done state */
-  .done-icon { font-size: 52px; margin-bottom: 14px; }
-  .done-title { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
-  .done-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+/* ── DONE STATE ── */
+.done-wrap{display:none;}
+.done-top{
+  background:linear-gradient(135deg,rgba(46,196,182,.1),rgba(46,196,182,.03));
+  border:1px solid rgba(46,196,182,.2);
+  border-radius:12px;padding:28px;margin-bottom:20px;
+}
+.done-icon{font-size:48px;margin-bottom:12px;}
+.done-title{font-size:22px;font-weight:800;margin-bottom:6px;}
+.done-sub{font-size:13px;color:var(--muted);}
 
-  .btn-dl {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 14px 36px;
-    background: var(--green); color: #fff;
-    border-radius: 10px; font-size: 15px; font-weight: 700;
-    text-decoration: none; transition: opacity .2s;
-  }
-  .btn-dl:hover { opacity: .85; }
+.btn-dl{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:15px 32px;
+  background:var(--green);color:#fff;
+  border-radius:12px;font-size:15px;font-weight:800;
+  text-decoration:none;width:100%;
+  transition:transform .15s,box-shadow .15s;
+  box-shadow:0 4px 20px rgba(46,196,182,.3);
+  margin-bottom:16px;
+}
+.btn-dl:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(46,196,182,.4);}
 
-  .val-pills { display: flex; justify-content: center; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
-  .pill {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; padding: 10px 18px; text-align: center;
-  }
-  .pill .n { font-size: 24px; font-weight: 800; }
-  .pill .l { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .pill.ok .n { color: var(--green); }
-  .pill.fail .n { color: var(--accent); }
+.val-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.val-box{
+  background:var(--s2);border:1px solid var(--border);
+  border-radius:10px;padding:14px;text-align:center;
+}
+.val-num{font-size:28px;font-weight:900;}
+.val-lbl{font-size:11px;color:var(--muted);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+.val-pass .val-num{color:var(--green);}
+.val-fail .val-num{color:var(--accent);}
 
-  /* Error */
-  .error-box {
-    background: rgba(230,57,70,.08); border: 1px solid rgba(230,57,70,.3);
-    border-radius: 10px; padding: 16px; margin-top: 16px;
-    font-size: 13px; color: #f4a1a7; white-space: pre-wrap;
-    word-break: break-word; text-align: left; display: none;
-  }
+.reset-btn{
+  background:none;border:none;color:var(--muted);
+  font-size:13px;cursor:pointer;text-decoration:underline;
+  margin-top:14px;
+}
+.reset-btn:hover{color:var(--text);}
 
-  /* Reset link */
-  .reset-link {
-    display: none; margin-top: 18px;
-    font-size: 13px; color: var(--muted);
-    cursor: pointer; text-decoration: underline;
-  }
-  .reset-link:hover { color: var(--text); }
+/* ── ERROR ── */
+.err-box{
+  background:rgba(230,57,70,.08);
+  border:1px solid rgba(230,57,70,.2);
+  border-radius:10px;padding:16px;
+  font-size:13px;color:#f4868d;
+  white-space:pre-wrap;word-break:break-word;
+  margin-top:16px;display:none;text-align:left;
+}
 
-  /* Step hints */
-  .steps {
-    display: flex; justify-content: center; gap: 6px;
-    margin-bottom: 28px; flex-wrap: wrap;
-  }
-  .step {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 100px; padding: 5px 14px;
-    font-size: 12px; color: var(--muted);
-    display: flex; align-items: center; gap: 6px;
-  }
-  .step .num {
-    width: 18px; height: 18px; border-radius: 50%;
-    background: var(--border); font-size: 10px; font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--text);
-  }
+/* ── FOOTER ── */
+footer{
+  text-align:center;padding:32px;
+  font-size:12px;color:var(--muted);
+  position:relative;z-index:1;
+  border-top:1px solid var(--border);
+}
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <!-- Header -->
-  <div class="header">
-    <div class="tvs-badge">⚡ TVS CPS Automation</div>
-    <h1>Upload Excel.<br><span>Get your Deck.</span></h1>
-    <p>Drop the two monthly Excel files below<br>and your performance deck is generated automatically.</p>
+<nav>
+  <div class="nav-logo">T</div>
+  <div class="nav-title">TVS CPS Automation</div>
+  <div class="nav-sub">BikeDekho · Zigwheels Performance Deck</div>
+</nav>
+
+<div class="hero">
+  <div class="hero-pill">⚡ Automated Deck Generation</div>
+  <h1>Upload Excel.<br><em>Get your Deck.</em></h1>
+  <p>Drop the two monthly Excel files. Your TVS CPS Performance Deck is generated and ready to download in seconds.</p>
+  <div class="hero-steps">
+    <div class="hs"><span class="hs-num">1</span> Upload 2 Excel files</div>
+    <span class="hs-arrow">→</span>
+    <div class="hs"><span class="hs-num">2</span> Click Generate</div>
+    <span class="hs-arrow">→</span>
+    <div class="hs"><span class="hs-num">3</span> Download Deck</div>
   </div>
+</div>
 
-  <div class="steps">
-    <div class="step"><span class="num">1</span> Upload 2 Excel files</div>
-    <div class="step"><span class="num">2</span> Click Generate</div>
-    <div class="step"><span class="num">3</span> Download Deck</div>
-  </div>
+<div class="content">
 
-  <!-- Form -->
   <form id="gen-form">
-    <div class="uploads-card">
-      <div class="uploads-grid">
 
-        <!-- Current FY -->
-        <div>
-          <div class="drop-zone" id="box-curr">
-            <input type="file" name="curr_xlsb" accept=".xlsb,.xlsx,.xls" required
-                   onchange="onFile(this,'box-curr','fn-curr')">
-            <div class="dz-icon">📊</div>
-            <div class="dz-title">Current FY</div>
-            <div class="dz-hint">FY 2026-27 Excel<br>.xlsb / .xlsx</div>
-            <div class="dz-filename" id="fn-curr"></div>
-          </div>
+    <!-- Template status -->
+    {% if has_template %}
+    <div class="tmpl-notice">
+      <span class="dot"></span>
+      <span>Template deck loaded on server — ready to generate</span>
+    </div>
+    {% else %}
+    <div class="tmpl-notice">
+      <span class="dot red"></span>
+      <span>No template on server. Upload the base PPTX once below.</span>
+    </div>
+    <div class="tmpl-upload-wrap">
+      <div class="drop" id="box-tmpl" style="padding:20px 16px;">
+        <input type="file" name="template_pptx" accept=".pptx"
+               onchange="onFile(this,'box-tmpl','fn-tmpl')">
+        <span class="drop-icon" style="font-size:24px;">📑</span>
+        <div class="drop-label" style="font-size:12px;">Base PPTX (upload once)</div>
+        <div class="drop-hint">Last month's deck</div>
+        <div class="drop-fname" id="fn-tmpl"></div>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-top:8px;cursor:pointer;">
+        <input type="checkbox" name="save_template" value="1" checked
+               style="accent-color:var(--green);width:14px;height:14px;">
+        Save as default template for all future runs
+      </label>
+    </div>
+    {% endif %}
+
+    <!-- The 2 Excel uploads -->
+    <div class="upload-section">
+      <div class="section-label">Monthly Excel Files</div>
+      <div class="upload-grid">
+
+        <div class="drop" id="box-curr">
+          <input type="file" name="curr_xlsb" accept=".xlsb,.xlsx,.xls" required
+                 onchange="onFile(this,'box-curr','fn-curr')">
+          <span class="drop-icon">📊</span>
+          <div class="drop-label">Current FY</div>
+          <div class="drop-hint">FY 2026-27<br>.xlsb / .xlsx</div>
+          <div class="drop-fname" id="fn-curr"></div>
         </div>
 
-        <!-- Previous FY -->
-        <div>
-          <div class="drop-zone" id="box-prev">
-            <input type="file" name="prev_xlsb" accept=".xlsb,.xlsx,.xls" required
-                   onchange="onFile(this,'box-prev','fn-prev')">
-            <div class="dz-icon">📋</div>
-            <div class="dz-title">Previous FY</div>
-            <div class="dz-hint">FY 2025-26 Excel<br>.xlsb / .xlsx</div>
-            <div class="dz-filename" id="fn-prev"></div>
-          </div>
+        <div class="drop" id="box-prev">
+          <input type="file" name="prev_xlsb" accept=".xlsb,.xlsx,.xls" required
+                 onchange="onFile(this,'box-prev','fn-prev')">
+          <span class="drop-icon">📋</span>
+          <div class="drop-label">Previous FY</div>
+          <div class="drop-hint">FY 2025-26<br>.xlsb / .xlsx</div>
+          <div class="drop-fname" id="fn-prev"></div>
         </div>
 
       </div>
-
-      <!-- Hidden: template always uses saved one -->
-      <input type="hidden" name="use_saved_template" value="1">
-
     </div>
 
-    <button type="submit" class="btn-generate" id="submit-btn">
+    <button type="submit" class="btn-gen" id="submit-btn">
       <span>⚡</span> Generate Deck
     </button>
   </form>
 
-  <!-- Status card (shown after submit) -->
+  <!-- Status -->
   <div class="status-card" id="status-card">
-    <!-- Running state -->
-    <div id="state-running">
-      <div class="spinner-wrap"><div class="spinner"></div></div>
-      <div class="status-msg" id="status-msg">Starting…</div>
-      <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
-    </div>
-    <!-- Done state -->
-    <div id="state-done" style="display:none">
-      <div class="done-icon">🎉</div>
-      <div class="done-title">Deck Ready!</div>
-      <div class="done-sub" id="done-sub">Your updated performance deck is ready to download.</div>
-      <a href="#" id="dl-btn" class="btn-dl">⬇️ Download Deck</a>
-      <div class="val-pills">
-        <div class="pill ok"><div class="n" id="v-pass">—</div><div class="l">Checks Passed</div></div>
-        <div class="pill fail"><div class="n" id="v-fail">—</div><div class="l">Checks Failed</div></div>
+    <div id="running-state">
+      <div class="spinner"></div>
+      <div class="status-steps">
+        <div class="sstep" id="st-1"><span class="sstep-dot"></span>Reading Excel files</div>
+        <div class="sstep" id="st-2"><span class="sstep-dot"></span>Updating charts</div>
+        <div class="sstep" id="st-3"><span class="sstep-dot"></span>Updating slide tables</div>
+        <div class="sstep" id="st-4"><span class="sstep-dot"></span>Validating numbers</div>
+        <div class="sstep" id="st-5"><span class="sstep-dot"></span>Packaging deck</div>
       </div>
-      <div class="reset-link" id="reset-link" onclick="resetForm()">Generate another deck</div>
+    </div>
+
+    <div class="done-wrap" id="done-state">
+      <div class="done-top">
+        <div class="done-icon">🎉</div>
+        <div class="done-title">Deck Ready!</div>
+        <div class="done-sub" id="done-msg">Your performance deck has been generated.</div>
+      </div>
+      <a href="#" id="dl-btn" class="btn-dl">⬇️ &nbsp;Download Deck (.pptx)</a>
+      <div class="val-row">
+        <div class="val-box val-pass"><div class="val-num" id="v-pass">—</div><div class="val-lbl">Checks Passed</div></div>
+        <div class="val-box val-fail"><div class="val-num" id="v-fail">—</div><div class="val-lbl">Checks Failed</div></div>
+      </div>
+      <button class="reset-btn" onclick="reset()">Generate another deck</button>
     </div>
   </div>
 
-  <!-- Error -->
-  <div class="error-box" id="err-box"></div>
+  <div class="err-box" id="err-box"></div>
 
 </div>
 
+<footer>
+  TVS CPS Performance Deck Automation &nbsp;·&nbsp; BikeDekho &amp; Zigwheels Leads Analytics
+</footer>
+
 <script>
+// ── File chosen ──
+let detectedMonth = 7;
+const MONTH_ABBRS = ['apr','may','jun','jul','aug','sep','oct','nov','dec','jan','feb','mar'];
+
 function onFile(inp, boxId, fnId) {
   if (!inp.files.length) return;
-  const box = document.getElementById(boxId);
-  const fn  = document.getElementById(fnId);
-  box.classList.add('ready');
-  fn.textContent = inp.files[0].name;
-
-  // Auto-detect month from filename e.g. "Oct'26" → month 7
   const name = inp.files[0].name;
+  document.getElementById(boxId).classList.add('ready');
+  document.getElementById(fnId).textContent = name;
   if (boxId === 'box-curr') {
-    autoDetectMonth(name);
-  }
-}
-
-const MONTH_MAP = {
-  apr:1, may:2, jun:3, jul:4, aug:5, sep:6, oct:7,
-  nov:8, dec:9, jan:10, feb:11, mar:12
-};
-function autoDetectMonth(filename) {
-  const lower = filename.toLowerCase();
-  for (const [abbr, idx] of Object.entries(MONTH_MAP)) {
-    if (lower.includes(abbr)) {
-      window._detectedMonth = idx;
-      window._detectedMonthName = abbr.charAt(0).toUpperCase() + abbr.slice(1);
-      break;
+    const lower = name.toLowerCase();
+    for (let i = 0; i < MONTH_ABBRS.length; i++) {
+      if (lower.includes(MONTH_ABBRS[i])) { detectedMonth = i + 1; break; }
     }
   }
 }
 
-// Drag & drop
-document.querySelectorAll('.drop-zone').forEach(zone => {
-  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
-  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
-  zone.addEventListener('drop', e => {
-    e.preventDefault(); zone.classList.remove('dragover');
-    const inp = zone.querySelector('input[type=file]');
+// ── Drag & drop ──
+document.querySelectorAll('.drop').forEach(z => {
+  z.addEventListener('dragover', e => { e.preventDefault(); z.classList.add('over'); });
+  z.addEventListener('dragleave', () => z.classList.remove('over'));
+  z.addEventListener('drop', e => {
+    e.preventDefault(); z.classList.remove('over');
+    const inp = z.querySelector('input[type=file]');
     if (inp && e.dataTransfer.files.length) {
       inp.files = e.dataTransfer.files;
       inp.dispatchEvent(new Event('change'));
@@ -323,93 +428,104 @@ document.querySelectorAll('.drop-zone').forEach(zone => {
   });
 });
 
-document.getElementById('gen-form').addEventListener('submit', async function(e) {
+// ── Step progress ──
+const stepMsgs = {
+  'Reading': 'st-1', 'Copying': 'st-2', 'Updating charts': 'st-2',
+  'Updating': 'st-3', 'Validat': 'st-4', 'Packaging': 'st-5',
+  'Starting': 'st-1', 'Uploading': 'st-1',
+};
+function highlightStep(msg) {
+  for (const [key, id] of Object.entries(stepMsgs)) {
+    if (msg.includes(key)) {
+      document.querySelectorAll('.sstep').forEach(s => {
+        s.classList.remove('active');
+        const sid = s.id;
+        const order = ['st-1','st-2','st-3','st-4','st-5'];
+        const cur = order.indexOf(id);
+        const me  = order.indexOf(sid);
+        if (me < cur) s.classList.add('done');
+      });
+      const el = document.getElementById(id);
+      if (el) el.classList.add('active');
+      break;
+    }
+  }
+}
+
+// ── Form submit ──
+document.getElementById('gen-form').addEventListener('submit', async e => {
   e.preventDefault();
-
-  const submitBtn = document.getElementById('submit-btn');
-  submitBtn.disabled = true;
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
   document.getElementById('status-card').style.display = 'block';
-  document.getElementById('state-running').style.display = 'block';
-  document.getElementById('state-done').style.display = 'none';
+  document.getElementById('running-state').style.display = 'block';
+  document.getElementById('done-state').style.display = 'none';
   document.getElementById('err-box').style.display = 'none';
-  document.getElementById('err-box').textContent = '';
 
-  const fd = new FormData(this);
-
-  // Inject detected month
-  fd.append('month_idx', window._detectedMonth || 7);
-  const monthNames = ['','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
-  const mi = window._detectedMonth || 7;
-  fd.append('month_label', monthNames[mi] + '-2026');
-  fd.append('old_month_label', '');
-  fd.append('plan_leads_month', '0');
-  fd.append('plan_retails_month', '0');
-  fd.append('plan_leads_ytd', '0');
-  fd.append('plan_retails_ytd', '0');
-
-  setMsg('Uploading files…');
+  const fd = new FormData(e.target);
+  fd.append('month_idx', detectedMonth);
 
   let jobId;
   try {
-    const res = await fetch('/generate', { method: 'POST', body: fd });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Upload failed');
-    jobId = data.job_id;
+    const r = await fetch('/generate', { method:'POST', body:fd });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Upload failed');
+    jobId = d.job_id;
+    highlightStep('Reading');
   } catch(err) {
-    showError(err.message);
-    submitBtn.disabled = false;
+    showErr(err.message);
+    btn.disabled = false;
     return;
   }
 
-  // Poll
   const poll = setInterval(async () => {
     try {
       const r = await fetch('/status/' + jobId);
       const j = await r.json();
-      setMsg(j.msg || '…');
+      highlightStep(j.msg || '');
       if (j.status === 'done') {
         clearInterval(poll);
         showDone(jobId, j);
-        submitBtn.disabled = false;
+        btn.disabled = false;
       } else if (j.status === 'error') {
         clearInterval(poll);
-        showError(j.msg + (j.trace ? '\n\n' + j.trace : ''));
-        submitBtn.disabled = false;
+        showErr(j.msg + (j.trace ? '\n\n' + j.trace : ''));
+        btn.disabled = false;
       }
     } catch {}
   }, 1200);
 });
 
-function setMsg(m) {
-  document.getElementById('status-msg').textContent = m;
-}
-
 function showDone(jobId, j) {
-  document.getElementById('state-running').style.display = 'none';
-  document.getElementById('state-done').style.display = 'block';
+  document.getElementById('running-state').style.display = 'none';
+  document.getElementById('done-state').style.display = 'block';
   document.getElementById('dl-btn').href = '/download/' + jobId;
   document.getElementById('dl-btn').download = j.filename || 'deck.pptx';
+  document.getElementById('done-msg').textContent = j.msg || 'Your performance deck is ready.';
   const v = j.validation || {};
   document.getElementById('v-pass').textContent = v.passed ?? '—';
   document.getElementById('v-fail').textContent = v.failed ?? '—';
-  document.getElementById('reset-link').style.display = 'block';
+  // Mark all steps done
+  document.querySelectorAll('.sstep').forEach(s => { s.classList.remove('active'); s.classList.add('done'); });
 }
 
-function showError(msg) {
-  document.getElementById('state-running').style.display = 'none';
-  document.getElementById('err-box').style.display = 'block';
-  document.getElementById('err-box').textContent = '⚠️ ' + msg;
+function showErr(msg) {
   document.getElementById('status-card').style.display = 'none';
+  document.getElementById('running-state').style.display = 'none';
+  const eb = document.getElementById('err-box');
+  eb.style.display = 'block';
+  eb.textContent = '⚠️  ' + msg;
 }
 
-function resetForm() {
+function reset() {
   document.getElementById('gen-form').reset();
-  document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('ready'));
-  document.querySelectorAll('.dz-filename').forEach(f => f.textContent = '');
+  document.querySelectorAll('.drop').forEach(z => z.classList.remove('ready'));
+  document.querySelectorAll('.drop-fname').forEach(f => f.textContent = '');
+  document.querySelectorAll('.sstep').forEach(s => s.classList.remove('active','done'));
   document.getElementById('status-card').style.display = 'none';
   document.getElementById('err-box').style.display = 'none';
   document.getElementById('submit-btn').disabled = false;
-  window._detectedMonth = null;
+  detectedMonth = 7;
 }
 </script>
 </body>
