@@ -35,14 +35,26 @@ def replace_text_exact(xml_bytes: bytes, old_text: str, new_text: str) -> bytes:
     """Replace first occurrence of old_text in an <a:t> run with new_text."""
     old_b = ("<a:t>" + old_text + "</a:t>").encode()
     new_b = ("<a:t>" + new_text + "</a:t>").encode()
-    return xml_bytes.replace(old_b, new_b, 1)
+    if old_b in xml_bytes:
+        return xml_bytes.replace(old_b, new_b, 1)
+    pattern = re.compile(rb'<a:t>\s*' + re.escape(old_text.encode()) + rb'\s*</a:t>')
+    repl_b = b"<a:t>" + new_text.encode() + b"</a:t>"
+    m = pattern.search(xml_bytes)
+    if m:
+        return xml_bytes[:m.start()] + repl_b + xml_bytes[m.end():]
+    return xml_bytes
 
 
 def replace_all_text(xml_bytes: bytes, old_text: str, new_text: str) -> bytes:
-    """Replace all occurrences of old_text in <a:t> runs."""
+    """Replace all occurrences of old_text in <a:t> runs, tolerating surrounding whitespace."""
     old_b = ("<a:t>" + old_text + "</a:t>").encode()
     new_b = ("<a:t>" + new_text + "</a:t>").encode()
-    return xml_bytes.replace(old_b, new_b)
+    if old_b in xml_bytes:
+        return xml_bytes.replace(old_b, new_b)
+    # Flexible: match with optional surrounding whitespace inside <a:t>
+    pattern = re.compile(rb'<a:t>\s*' + re.escape(old_text.encode()) + rb'\s*</a:t>')
+    repl_b = b"<a:t>" + new_text.encode() + b"</a:t>"
+    return pattern.sub(repl_b, xml_bytes)
 
 
 # ---------------------------------------------------------------------------
@@ -173,15 +185,20 @@ def update_kpi_slide(slide_path: str, kpi: dict, old_values: dict) -> None:
     """
     xml = _read(slide_path)
 
+    ytd_pct = kpi["ytd_act"] / kpi["ytd_plan"] if kpi.get("ytd_plan") else 0
+    ytd_growth = (kpi["ytd_act"] - kpi["ytd_ly"]) / kpi["ytd_ly"] if kpi.get("ytd_ly") else 0
+
     mapping = {
-        "ty_act":   fmt_num(kpi["ty_act"]),
-        "ly_act":   fmt_num(kpi["ly_act"]),
-        "ty_plan":  fmt_num(kpi["ty_plan"]) if kpi["ty_plan"] else "",
-        "pct_ach":  fmt_pct(kpi["pct_ach"]),
-        "growth":   (("+" if kpi["growth"] >= 0 else "") + fmt_pct(kpi["growth"])),
-        "ytd_ly":   fmt_num(kpi["ytd_ly"]),
-        "ytd_plan": fmt_num(kpi["ytd_plan"]) if kpi["ytd_plan"] else "",
-        "ytd_act":  fmt_num(kpi["ytd_act"]),
+        "ty_act":    fmt_num(kpi["ty_act"]),
+        "ly_act":    fmt_num(kpi["ly_act"]),
+        "ty_plan":   fmt_num(kpi["ty_plan"]) if kpi.get("ty_plan") else "",
+        "pct_ach":   fmt_pct(kpi["pct_ach"]) if kpi.get("ty_plan") else "",
+        "growth":    (("+" if kpi["growth"] >= 0 else "") + fmt_pct(kpi["growth"])),
+        "ytd_ly":    fmt_num(kpi["ytd_ly"]),
+        "ytd_plan":  fmt_num(kpi["ytd_plan"]) if kpi.get("ytd_plan") else "",
+        "ytd_act":   fmt_num(kpi["ytd_act"]),
+        "ytd_pct":   fmt_pct(ytd_pct) if kpi.get("ytd_plan") else "",
+        "ytd_growth": (("+" if ytd_growth >= 0 else "") + fmt_pct(ytd_growth)),
     }
 
     for field, old_str in old_values.items():

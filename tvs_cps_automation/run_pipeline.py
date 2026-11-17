@@ -219,13 +219,16 @@ def update_slides(unpacked: str, extracted: dict, args) -> None:
     slide13 = os.path.join(slides_dir, "slide13.xml")
     if os.path.exists(slide13):
         old_vals = {
-            "ty_act":  "157,618",
-            "ly_act":  "166,636",
-            "ty_plan": "180,000",
-            "pct_ach": "88%",
-            "ytd_act": "719,860",
-            "ytd_ly":  "910,651",
-            "ytd_plan": "890,000",
+            "ty_act":    "157,618",
+            "ly_act":    "166,636",
+            "ty_plan":   "180,000",
+            "pct_ach":   "88%",
+            "growth":    "-5%",
+            "ytd_act":   "719,860",
+            "ytd_ly":    "910,651",
+            "ytd_plan":  "890,000",
+            "ytd_pct":   "81%",
+            "ytd_growth": "-21%",
         }
         su.update_kpi_slide(slide13, kpi_leads, old_vals)
         print("[deck] slide13 KPIs updated")
@@ -233,13 +236,16 @@ def update_slides(unpacked: str, extracted: dict, args) -> None:
     slide14 = os.path.join(slides_dir, "slide14.xml")
     if os.path.exists(slide14):
         old_vals_r = {
-            "ty_act":  "18,664",
-            "ly_act":  "20,386",
-            "ty_plan": "20,500",
-            "pct_ach": "91%",
-            "ytd_act": "93,964",
-            "ytd_ly":  "132,426",
-            "ytd_plan": "100,000",
+            "ty_act":    "18,664",
+            "ly_act":    "20,386",
+            "ty_plan":   "20,500",
+            "pct_ach":   "91%",
+            "growth":    "-8%",
+            "ytd_act":   "93,964",
+            "ytd_ly":    "132,426",
+            "ytd_plan":  "100,000",
+            "ytd_pct":   "94%",
+            "ytd_growth": "-29%",
         }
         su.update_kpi_slide(slide14, kpi_retails, old_vals_r)
         print("[deck] slide14 KPIs updated")
