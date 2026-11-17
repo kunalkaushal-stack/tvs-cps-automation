@@ -299,22 +299,71 @@ def get_top_bottom_dealers(dealers: list[dict], state: str, n: int = 10) -> tupl
     return top, bottom
 
 
+def _read_dealer_summary_grand_total(xlsb_path: str) -> dict:
+    """Read the Grand Total row from Dealer Summary (row index 2). Returns monthly arrays."""
+    with pyxlsb.open_workbook(xlsb_path) as wb:
+        with wb.get_sheet("Dealer Summary") as sheet:
+            for ri, row in enumerate(sheet.rows()):
+                if ri == 2:
+                    vals = [c.v for c in row]
+                    monthly_leads   = [_safe(vals[12 + m*2] if 12+m*2 < len(vals) else None) for m in range(12)]
+                    monthly_retails = [_safe(vals[13 + m*2] if 13+m*2 < len(vals) else None) for m in range(12)]
+                    return {
+                        "fy_prev_leads":   _safe(vals[9]  if len(vals) > 9  else None),
+                        "fy_prev_retails": _safe(vals[10] if len(vals) > 10 else None),
+                        "monthly_leads":   monthly_leads,
+                        "monthly_retails": monthly_retails,
+                    }
+    return {"fy_prev_leads": 0.0, "fy_prev_retails": 0.0,
+            "monthly_leads": [0.0]*12, "monthly_retails": [0.0]*12}
+
+
+def _aggregate_dealers_by_area(dealers: list[dict]) -> dict[str, dict]:
+    """Aggregate dealer rows by area code — replaces Area wise Summary for curr year."""
+    area_data: dict[str, dict] = {}
+    for d in dealers:
+        area = d["area"]
+        if not area:
+            continue
+        if area not in area_data:
+            area_data[area] = {
+                "fy_prev_leads": 0.0, "fy_prev_retails": 0.0,
+                "monthly_leads": [0.0]*12, "monthly_retails": [0.0]*12,
+                "fy_curr_leads": 0.0, "fy_curr_retails": 0.0,
+            }
+        a = area_data[area]
+        a["fy_prev_leads"]   += d["fy_prev_leads"]
+        a["fy_prev_retails"] += d["fy_prev_retails"]
+        a["fy_curr_leads"]   += d["fy_curr_leads"]
+        a["fy_curr_retails"] += d["fy_curr_retails"]
+        for i in range(12):
+            a["monthly_leads"][i]   += d["monthly_leads"][i]
+            a["monthly_retails"][i] += d["monthly_retails"][i]
+    for a in area_data.values():
+        a["fy_prev_conv"] = compute_conv(a["fy_prev_leads"], a["fy_prev_retails"])
+        a["fy_curr_conv"] = compute_conv(a["fy_curr_leads"], a["fy_curr_retails"])
+    return area_data
+
+
 def detect_report_month(curr_xlsb: str) -> int:
     """
-    Auto-detect the last month that has actual lead data in the current FY file.
-    Returns 1=Apr ... 12=Mar.  Falls back to 1 if nothing found.
+    Auto-detect the last COMPLETE month from Dealer Summary Grand Total row.
+    If the last non-zero month is > 1.3x the previous (in-progress/partial),
+    use the second-to-last. Returns 1=Apr ... 12=Mar.
     """
-    area_rows = _read_summary_sheet(curr_xlsb, "Area wise Summary")["rows"]
-    # Aggregate monthly leads across all areas
-    total = [0.0] * 12
-    for d in area_rows.values():
-        for i in range(12):
-            total[i] += d["monthly_leads"][i]
-    # Last non-zero month
-    for m in range(11, -1, -1):
-        if total[m] > 0:
-            return m + 1  # 1-based
-    return 1
+    gt = _read_dealer_summary_grand_total(curr_xlsb)
+    monthly = gt["monthly_leads"]
+    non_zero = [(i + 1, monthly[i]) for i in range(12) if monthly[i] > 0]
+    if not non_zero:
+        return 1
+    if len(non_zero) == 1:
+        return non_zero[0][0]
+    last_m, last_v = non_zero[-1]
+    prev_m, prev_v = non_zero[-2]
+    # Last month is partial if its total is > 1.3× the previous complete month
+    if prev_v > 0 and last_v / prev_v > 1.3:
+        return prev_m
+    return last_m
 
 
 def extract_plan(plan_xlsx: str, month_idx: int) -> dict:
@@ -408,42 +457,20 @@ def extract_all(
     report_month_idx: 1=Apr, 2=May, 3=Jun, 4=Jul, 5=Aug, 6=Sep, 7=Oct...
     """
     print(f"[extract] Reading current year file: {curr_xlsb}")
-    curr_area = _read_summary_sheet(curr_xlsb, "Area wise Summary")["rows"]
-
-    # Auto-detect report month: last month with non-zero total leads
-    if report_month_idx == 0:
-        total_ml = [0.0] * 12
-        for d in curr_area.values():
-            for i in range(12):
-                total_ml[i] += d["monthly_leads"][i]
-        report_month_idx = next((m + 1 for m in range(11, -1, -1) if total_ml[m] > 0), 1)
-        print(f"[extract] Auto-detected report month: {MONTHS[report_month_idx-1]} ({report_month_idx})")
-    curr_ism  = _read_summary_sheet(curr_xlsb, "ISM Wise")["rows"]
+    # Use Dealer Summary as primary source — it has current-month data without BikeDekho lag
     curr_dealers = _read_dealer_sheet(curr_xlsb)
+    grand_curr   = _read_dealer_summary_grand_total(curr_xlsb)
+    curr_area    = _aggregate_dealers_by_area(curr_dealers)
+    curr_ism     = _read_summary_sheet(curr_xlsb, "ISM Wise")["rows"]
+
+    # Auto-detect report month from Dealer Summary Grand Total (skips partial in-progress month)
+    if report_month_idx == 0:
+        report_month_idx = detect_report_month(curr_xlsb)
+        print(f"[extract] Auto-detected report month: {MONTHS[report_month_idx-1]} ({report_month_idx})")
 
     print(f"[extract] Reading prior year file:   {prev_xlsb}")
     prev_area = _read_summary_sheet(prev_xlsb, "Area wise Summary")["rows"]
     prev_ism  = _read_summary_sheet(prev_xlsb, "ISM Wise")["rows"]
-
-    # Grand totals
-    grand_curr = curr_area.get("Grand Total") or curr_area.get(None) or list(curr_area.values())[0]
-    # Fallback: sum all areas
-    if "Grand Total" not in curr_area:
-        g_leads = [0.0]*12
-        g_retails = [0.0]*12
-        g_leads_prev = 0.0
-        g_retails_prev = 0.0
-        for d in curr_area.values():
-            g_leads_prev += d["fy_prev_leads"]
-            g_retails_prev += d["fy_prev_retails"]
-            for i in range(12):
-                g_leads[i] += d["monthly_leads"][i]
-                g_retails[i] += d["monthly_retails"][i]
-        grand_curr = {
-            "fy_prev_leads": g_leads_prev, "fy_prev_retails": g_retails_prev,
-            "monthly_leads": g_leads, "monthly_retails": g_retails,
-            "fy_curr_leads": sum(g_leads), "fy_curr_retails": sum(g_retails),
-        }
 
     # Prev year grand total (for LY same-month comparison)
     if "Grand Total" not in prev_area:
@@ -460,6 +487,16 @@ def extract_all(
         grand_prev = prev_area["Grand Total"]
 
     mi = report_month_idx - 1  # 0-based month index
+
+    # Zero out months AFTER the report month in current year data
+    # (partial in-progress month data must not appear in charts or KPIs)
+    for i in range(mi + 1, 12):
+        grand_curr["monthly_leads"][i]   = 0.0
+        grand_curr["monthly_retails"][i] = 0.0
+    for area_d in curr_area.values():
+        for i in range(mi + 1, 12):
+            area_d["monthly_leads"][i]   = 0.0
+            area_d["monthly_retails"][i] = 0.0
 
     # Computed KPIs
     ty_act_leads   = grand_curr["monthly_leads"][mi]
