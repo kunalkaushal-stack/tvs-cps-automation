@@ -297,14 +297,31 @@ def run(args) -> None:
 
     # --- Stage 1: Extract data ---
     print("\n[1/4] Extracting data from Excel files...")
+
+    # Read plan file if provided
+    plan_leads_month   = args.plan_leads_month
+    plan_retails_month = args.plan_retails_month
+    plan_leads_ytd     = args.plan_leads_ytd
+    plan_retails_ytd   = args.plan_retails_ytd
+
+    if args.plan and os.path.exists(args.plan):
+        # Detect month first (auto) then read plan for that month
+        detected_month = ed.detect_report_month(args.curr)
+        effective_month = args.month if args.month else detected_month
+        plan = ed.extract_plan(args.plan, effective_month)
+        plan_leads_month   = plan["leads_month"]   or plan_leads_month
+        plan_retails_month = plan["retails_month"] or plan_retails_month
+        plan_leads_ytd     = plan["leads_ytd"]     or plan_leads_ytd
+        plan_retails_ytd   = plan["retails_ytd"]   or plan_retails_ytd
+
     extracted = ed.extract_all(
         curr_xlsb=args.curr,
         prev_xlsb=args.prev,
-        report_month_idx=args.month,
-        plan_leads_month=args.plan_leads_month,
-        plan_retails_month=args.plan_retails_month,
-        plan_leads_ytd=args.plan_leads_ytd,
-        plan_retails_ytd=args.plan_retails_ytd,
+        report_month_idx=args.month if args.month else 0,
+        plan_leads_month=plan_leads_month,
+        plan_retails_month=plan_retails_month,
+        plan_leads_ytd=plan_leads_ytd,
+        plan_retails_ytd=plan_retails_ytd,
     )
     print(f"  Report month: {extracted['report_month_name']}")
     print(f"  TY Leads this month: {extracted['kpi']['leads']['ty_act']:,.0f}")
@@ -361,7 +378,8 @@ def main():
     p.add_argument("--curr",     required=True, help="Current FY .xlsb file path")
     p.add_argument("--prev",     required=True, help="Prior FY .xlsb file path")
     p.add_argument("--template", required=True, help="Template .pptx (previous month's deck)")
-    p.add_argument("--month",    required=True, type=int, help="Report month index: 1=Apr, 5=Aug, 6=Sep...")
+    p.add_argument("--month",    type=int, default=0, help="Report month index: 1=Apr ... 12=Mar (0=auto-detect from data)")
+    p.add_argument("--plan",     default="",  help="Plan/target Excel file (.xlsx) with monthly plan values")
     p.add_argument("--month-label",     default="",  help="New month label for title slide e.g. 'Sep-2026'")
     p.add_argument("--old-month-label", default="",  help="Existing month label to replace e.g. 'Aug-2026'")
     p.add_argument("--plan-leads-month",    type=int, default=0)

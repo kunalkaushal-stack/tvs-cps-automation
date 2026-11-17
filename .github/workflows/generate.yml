@@ -7,9 +7,13 @@ on:
         description: 'Branch containing uploaded Excel files'
         required: true
       month_idx:
-        description: 'Report month (1=Apr ... 12=Mar)'
-        required: true
-        default: '7'
+        description: 'Report month (0=auto-detect, 1=Apr ... 12=Mar)'
+        required: false
+        default: '0'
+      has_plan:
+        description: 'Whether a plan.xlsx was uploaded (true/false)'
+        required: false
+        default: 'false'
 
 permissions:
   contents: write
@@ -35,6 +39,7 @@ jobs:
           sparse-checkout: |
             curr.xlsb
             prev.xlsb
+            plan.xlsx
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -43,7 +48,7 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
-        run: pip install pyxlsb
+        run: pip install pyxlsb openpyxl
 
       - name: Check template exists
         run: |
@@ -56,12 +61,17 @@ jobs:
       - name: Run pipeline
         run: |
           cd repo
+          PLAN_ARG=""
+          if [ "${{ inputs.has_plan }}" = "true" ] && [ -f "../upload/plan.xlsx" ]; then
+            PLAN_ARG="--plan ../upload/plan.xlsx"
+          fi
           python tvs_cps_automation/run_pipeline.py \
-            --curr  ../upload/curr.xlsb \
-            --prev  ../upload/prev.xlsb \
+            --curr     ../upload/curr.xlsb \
+            --prev     ../upload/prev.xlsb \
             --template assets/template.pptx \
-            --month ${{ inputs.month_idx }} \
-            --out   output.pptx
+            --month    ${{ inputs.month_idx }} \
+            --out      output.pptx \
+            $PLAN_ARG
         env:
           PYTHONPATH: .
 

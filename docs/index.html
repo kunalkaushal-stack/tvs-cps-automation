@@ -352,6 +352,15 @@ footer{text-align:center;padding:28px;font-size:12px;color:var(--muted);border-t
           <div class="drop-fname" id="fn-prev"></div>
         </div>
       </div>
+      <div style="margin-top:12px;">
+        <div class="drop" id="box-plan" style="padding:18px 14px;">
+          <input type="file" name="plan" accept=".xlsx,.xls" onchange="onFile(this,'box-plan','fn-plan',false)">
+          <div class="drop-icon" style="font-size:24px;margin-bottom:6px;">🎯</div>
+          <div class="drop-label">TY Plan / Target</div>
+          <div class="drop-hint">Optional · .xlsx — model-wise monthly plan</div>
+          <div class="drop-fname" id="fn-plan"></div>
+        </div>
+      </div>
     </div>
     <button type="submit" class="btn-gen" id="submit-btn">⚡ &nbsp;Generate Deck</button>
   </form>
@@ -616,6 +625,8 @@ document.getElementById('gen-form').addEventListener('submit', async e => {
 
   const currFile = e.target.curr.files[0];
   const prevFile = e.target.prev.files[0];
+  const planFileList = e.target.plan ? e.target.plan.files : null;
+  const planFile = planFileList && planFileList.length > 0 ? planFileList[0] : null;
 
   try {
     // 1. Upload files
@@ -628,7 +639,12 @@ document.getElementById('gen-form').addEventListener('submit', async e => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ref: `refs/heads/${branch}`, sha: masterSha }),
     });
-    const [cb64, pb64] = await Promise.all([readBase64(currFile), readBase64(prevFile)]);
+    const encJobs = [readBase64(currFile), readBase64(prevFile)];
+    if (planFile) encJobs.push(readBase64(planFile));
+    const encoded = await Promise.all(encJobs);
+    const [cb64, pb64] = encoded;
+    const planB64 = encoded[2] || null;
+
     await ghFetch(`/repos/${OWNER}/${REPO}/contents/curr.xlsb`, {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: 'Upload curr.xlsb', content: cb64, branch }),
@@ -637,6 +653,12 @@ document.getElementById('gen-form').addEventListener('submit', async e => {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: 'Upload prev.xlsb', content: pb64, branch }),
     });
+    if (planB64) {
+      await ghFetch(`/repos/${OWNER}/${REPO}/contents/plan.xlsx`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'Upload plan.xlsx', content: planB64, branch }),
+      });
+    }
     setStage('upload', 'done');
 
     // 2. Trigger workflow
@@ -644,7 +666,11 @@ document.getElementById('gen-form').addEventListener('submit', async e => {
     const triggerTime = new Date().toISOString();
     await ghFetch(`/repos/${OWNER}/${REPO}/actions/workflows/generate.yml/dispatches`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ref: 'master', inputs: { upload_branch: branch, month_idx: String(detectedMonth) } }),
+      body: JSON.stringify({ ref: 'master', inputs: {
+        upload_branch: branch,
+        month_idx: '0',
+        has_plan: planFile ? 'true' : 'false',
+      } }),
     });
 
     // 3. Wait for run to appear

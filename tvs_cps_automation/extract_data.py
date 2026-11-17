@@ -299,10 +299,98 @@ def get_top_bottom_dealers(dealers: list[dict], state: str, n: int = 10) -> tupl
     return top, bottom
 
 
+def detect_report_month(curr_xlsb: str) -> int:
+    """
+    Auto-detect the last month that has actual lead data in the current FY file.
+    Returns 1=Apr ... 12=Mar.  Falls back to 1 if nothing found.
+    """
+    area_rows = _read_summary_sheet(curr_xlsb, "Area wise Summary")["rows"]
+    # Aggregate monthly leads across all areas
+    total = [0.0] * 12
+    for d in area_rows.values():
+        for i in range(12):
+            total[i] += d["monthly_leads"][i]
+    # Last non-zero month
+    for m in range(11, -1, -1):
+        if total[m] > 0:
+            return m + 1  # 1-based
+    return 1
+
+
+def extract_plan(plan_xlsx: str, month_idx: int) -> dict:
+    """
+    Read a plan Excel file (model-wise monthly plan).
+    Expected layout: Row 0 = section header ('Leads'), Row 1 = headers
+    ["Model/Category", "Mar'PY", "Apr", "May", ..., "Mar", "Total"],
+    Row N = 'Total' row with grand totals.
+    Returns {leads_month, retails_month, leads_ytd, retails_ytd}.
+    """
+    try:
+        import openpyxl
+        wb = openpyxl.load_workbook(plan_xlsx, read_only=True, data_only=True)
+        ws = wb.active
+        rows = list(ws.iter_rows(values_only=True))
+        wb.close()
+    except Exception as e:
+        print(f"[plan] Could not read plan file: {e}")
+        return {"leads_month": 0, "retails_month": 0, "leads_ytd": 0, "retails_ytd": 0}
+
+    # Find header row (has "Apr" or starts with FY year)
+    header_row_idx = None
+    for i, row in enumerate(rows[:5]):
+        if row and any(str(c).startswith("Apr") for c in row if c):
+            header_row_idx = i
+            break
+    if header_row_idx is None:
+        print("[plan] Could not find header row with 'Apr'")
+        return {"leads_month": 0, "retails_month": 0, "leads_ytd": 0, "retails_ytd": 0}
+
+    # Map month index to column: col 1 = Mar(PY), col 2 = Apr (m=1), ..., col 13 = Mar (m=12)
+    # month_idx: 1=Apr, 7=Oct
+    def _plan_col(m):
+        return 1 + m  # col 2 = Apr, col 3 = May, ... (0-indexed: 1+1=2 for Apr)
+
+    # Find Total row (leads section)
+    leads_plan = [0] * 12
+    retails_plan = [0] * 12
+    section = "leads"
+    for row in rows[header_row_idx + 1:]:
+        if not row or row[0] is None:
+            continue
+        label = str(row[0]).strip()
+        if label.lower() == "retails" or label.lower() == "retail":
+            section = "retails"
+            continue
+        if label.lower() in ("total", "grand total"):
+            for m in range(1, 13):
+                col = _plan_col(m)
+                val = row[col] if col < len(row) else None
+                if isinstance(val, (int, float)):
+                    if section == "leads":
+                        leads_plan[m - 1] = int(val)
+                    else:
+                        retails_plan[m - 1] = int(val)
+
+    mi = month_idx - 1
+    leads_month = leads_plan[mi]
+    retails_month = retails_plan[mi]
+    leads_ytd = sum(leads_plan[:mi + 1])
+    retails_ytd = sum(retails_plan[:mi + 1])
+
+    print(f"[plan] month={MONTHS[mi]}: leads={leads_month:,}, retails={retails_month:,}, "
+          f"ytd_leads={leads_ytd:,}, ytd_retails={retails_ytd:,}")
+    return {
+        "leads_month": leads_month,
+        "retails_month": retails_month,
+        "leads_ytd": leads_ytd,
+        "retails_ytd": retails_ytd,
+    }
+
+
 def extract_all(
     curr_xlsb: str,
     prev_xlsb: str,
-    report_month_idx: int,     # 1=Apr, 2=May, ..., 5=Aug, ...
+    report_month_idx: int = 0,  # 0 = auto-detect from data
     plan_leads_month: int = 0,
     plan_retails_month: int = 0,
     plan_leads_ytd: int = 0,
@@ -321,6 +409,15 @@ def extract_all(
     """
     print(f"[extract] Reading current year file: {curr_xlsb}")
     curr_area = _read_summary_sheet(curr_xlsb, "Area wise Summary")["rows"]
+
+    # Auto-detect report month: last month with non-zero total leads
+    if report_month_idx == 0:
+        total_ml = [0.0] * 12
+        for d in curr_area.values():
+            for i in range(12):
+                total_ml[i] += d["monthly_leads"][i]
+        report_month_idx = next((m + 1 for m in range(11, -1, -1) if total_ml[m] > 0), 1)
+        print(f"[extract] Auto-detected report month: {MONTHS[report_month_idx-1]} ({report_month_idx})")
     curr_ism  = _read_summary_sheet(curr_xlsb, "ISM Wise")["rows"]
     curr_dealers = _read_dealer_sheet(curr_xlsb)
 
