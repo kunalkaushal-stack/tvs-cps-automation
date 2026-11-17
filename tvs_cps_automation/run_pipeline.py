@@ -283,12 +283,30 @@ def update_slides(unpacked: str, extracted: dict, args) -> None:
 def repack(unpacked_dir: str, output_path: str) -> None:
     if os.path.exists(output_path):
         os.remove(output_path)
+
+    # Collect all files, preserving compression type from original where possible
+    all_files = []
+    for root, dirs, files in os.walk(unpacked_dir):
+        for file in files:
+            abs_path = os.path.join(root, file)
+            arc_path = os.path.relpath(abs_path, unpacked_dir).replace("\\", "/")
+            all_files.append((arc_path, abs_path))
+
+    # PowerPoint requires [Content_Types].xml to be the first entry in the ZIP,
+    # followed by _rels/.rels, then everything else — wrong order corrupts the file.
+    def sort_key(item):
+        arc = item[0]
+        if arc == "[Content_Types].xml":
+            return 0
+        if arc == "_rels/.rels":
+            return 1
+        return 2
+
+    all_files.sort(key=sort_key)
+
     with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as z:
-        for root, dirs, files in os.walk(unpacked_dir):
-            for file in files:
-                abs_path = os.path.join(root, file)
-                arc_path = os.path.relpath(abs_path, unpacked_dir)
-                z.write(abs_path, arc_path)
+        for arc_path, abs_path in all_files:
+            z.write(abs_path, arc_path)
     print(f"[deck] Repacked → {output_path}")
 
 
